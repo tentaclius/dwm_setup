@@ -932,6 +932,7 @@ void findwin(const Arg *arg)
    char *selection = run_dmenu("windows>", variants);
    if (!selection) goto cleanup;
    char *sel = str_trim(selection);
+   if (*sel == '\0') goto cleanup;
    vi = (unsigned) atoi(sel);
 
    /* Find the selected window and give it a focus */
