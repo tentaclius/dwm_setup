@@ -191,6 +191,7 @@ static void drawbar(Monitor *m);
 static void drawbars(void);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
+static void findwin(const Arg *arg);
 static void focus(Client *c);
 static void focusin(XEvent *e);
 static void focusmon(const Arg *arg);
@@ -224,6 +225,7 @@ static void resizemouse(const Arg *arg);
 static void resizerequest(XEvent *e);
 static void restack(Monitor *m);
 static void run(void);
+static void run_app(const Arg *arg);
 static void scan(void);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void sendmon(Client *c, Monitor *m);
@@ -271,7 +273,6 @@ static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
 static void zoom(const Arg *arg);
 static void runAutostart();
-#include "findwin.h"
 
 /* variables */
 static Systray *systray =  NULL;
@@ -311,7 +312,6 @@ static Window root, wmcheckwin;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
-#include "findwin.c"
 
 struct Pertag {
 	unsigned int curtag, prevtag; /* current and previous tag */
@@ -904,6 +904,47 @@ expose(XEvent *e)
 		if (m == selmon)
 			updatesystray();
 	}
+}
+
+void findwin(const Arg *arg)
+{
+   Client *c;
+
+   char *variants[256 + 1];
+   variants[256] = NULL;
+   unsigned vi = 0;
+
+   /* Create a list of all client titles */
+   for (c = selmon->clients; c; c = c->next)
+   {
+      if (vi >= 256) break;
+      variants[vi] = c->name;
+      vi ++;
+   }
+   variants[vi] = NULL;
+
+   /* Get the user input */
+   char *selection = run_dmenu("windows>", variants);
+   if (!selection) goto cleanup;
+   char *sel = str_trim(selection);
+
+   /* Find the selected window and give it a focus */
+   for (c = selmon->clients; c; c = c->next)
+   {
+      if (strcmp(c->name, sel) == 0)
+      {
+         unsigned first_tag = 1;
+         while (!(first_tag & c->tags) && first_tag < LENGTH(tags))
+            first_tag <<= 1;
+
+         selmon->tagset[selmon->seltags] = first_tag;
+         focus(c);
+         arrange(selmon);
+      }
+   }
+
+cleanup:
+   free_not_null(selection);
 }
 
 void
@@ -1572,6 +1613,34 @@ run(void)
 	while (running && !XNextEvent(dpy, &ev))
 		if (handler[ev.type])
 			handler[ev.type](&ev); /* call handler */
+}
+
+void run_app(const Arg *arg)
+{
+   // Run dmenu to get the user's input
+   FILE *pp = popen("dmenu -i -l 10 -p 'applications>' < " APP_CACHE, "r");
+   if (!pp) goto cleanup;
+
+   char buf[1024 + 1];
+   buf[1024] = '\0';
+
+   fgets(buf, 1024, pp);
+
+   // Find the last entry (the .desktop file name)
+   char *p = rindex(buf, APP_CACHE_SEPARATOR);
+   if (!p) goto cleanup;
+   p ++;
+   p = str_trim(p);
+
+   // Execute the entry
+   if (fork() == 0)
+   {
+      execlp("gtk-launch", "gtk-launch", p, NULL);
+      exit(1);
+   }
+
+cleanup:
+   if (pp) fclose(pp);
 }
 
 void
