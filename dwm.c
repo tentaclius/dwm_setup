@@ -913,12 +913,17 @@ void findwin(const Arg *arg)
    char *variants[256 + 1];
    variants[256] = NULL;
    unsigned vi = 0;
+   unsigned i = 0;
+   char **vp;
 
    /* Create a list of all client titles */
    for (c = selmon->clients; c; c = c->next)
    {
       if (vi >= 256) break;
-      variants[vi] = c->name;
+      variants[vi] = (char*) malloc(strlen(c->name) + 6);
+      if (variants[vi] == NULL) goto cleanup;
+      sprintf(variants[vi], "%d. %s", vi, c->name);
+      //variants[vi] = c->name;
       vi ++;
    }
    variants[vi] = NULL;
@@ -927,11 +932,12 @@ void findwin(const Arg *arg)
    char *selection = run_dmenu("windows>", variants);
    if (!selection) goto cleanup;
    char *sel = str_trim(selection);
+   vi = (unsigned) atoi(sel);
 
    /* Find the selected window and give it a focus */
-   for (c = selmon->clients; c; c = c->next)
+   for (c = selmon->clients, i = 0; c; c = c->next, i ++)
    {
-      if (strcmp(c->name, sel) == 0)
+      if (i == vi)
       {
          unsigned first_tag = 1;
          while (!(first_tag & c->tags) && first_tag < LENGTH(tags))
@@ -940,10 +946,13 @@ void findwin(const Arg *arg)
          selmon->tagset[selmon->seltags] = first_tag;
          focus(c);
          arrange(selmon);
+         goto cleanup;
       }
    }
 
 cleanup:
+   for (vp = variants; *vp; vp ++)
+      free_not_null(*vp);
    free_not_null(selection);
 }
 
