@@ -9,4 +9,11 @@
 void die(const char *fmt, ...);
 void *ecalloc(size_t nmemb, size_t size);
 char* str_trim(char *str);
-char* run_dmenu(const char *prompt, char **variants);
+
+typedef struct {
+   int in;
+   int out;
+} InOutPipeT;
+
+InOutPipeT dmenu_qry(const char *prompt);
+char* dmenu_rsp(InOutPipeT fd);

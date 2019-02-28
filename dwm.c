@@ -913,50 +913,48 @@ expose(XEvent *e)
 void findwin(const Arg *arg)
 {
    Client *c = NULL;
-   char *variants[256 + 1];
-   variants[256] = NULL;
    char *selection = NULL;
-   unsigned vi = 0;
    unsigned i = 0;
-   char **vp;
 
-   /* Create a list of all client titles */
-   for (c = selmon->clients; c; c = c->next)
+   Client *c_index[256 + 1];
+   c_index[256] = NULL;
+   size_t ccount = 0;
+
+   char buf[256 + 1];
+   buf[256] = '\0';
+
+   /* Run dmenu and pass the list of client names to it*/
+   InOutPipeT pipe = dmenu_qry("windows>");
+   for (c = selmon->clients, i = 0; c && i < 256; c = c->next, i ++)
    {
-      if (vi >= 256) break;
-      variants[vi] = (char*) malloc(strlen(c->name) + 6);
-      if (variants[vi] == NULL) goto cleanup;
-      sprintf(variants[vi], "%d. %s", vi, c->name);
-      //variants[vi] = c->name;
-      vi ++;
+      snprintf(buf, 256, "%3u. ", i);
+      write(pipe.out, buf, strlen(buf));
+      write(pipe.out, c->name, strlen(c->name));
+      write(pipe.out, "\n", 1);
+      c_index[i] = c;
    }
-   variants[vi] = NULL;
+   c_index[i] = NULL;
+   ccount = i;
+   close(pipe.out);
 
    /* Get the user input */
-   selection = run_dmenu("windows>", variants);
-   if (!selection) goto cleanup;
-   if (*selection == '\0') goto cleanup;
-   vi = (unsigned) atoi(selection);
+   selection = dmenu_rsp(pipe);
+   if (!selection || *selection == '\0') goto cleanup;
+   i = (unsigned) atoi(selection);
+   if (i >= ccount) goto cleanup;
 
-   /* Find the selected window and give it a focus */
-   for (c = selmon->clients, i = 0; c; c = c->next, i ++)
-   {
-      if (i == vi)
-      {
-         unsigned first_tag = 1;
-         while (!(first_tag & c->tags) && first_tag < (1<<LENGTH(tags)))
-            first_tag <<= 1;
+   c = c_index[i];
 
-         selmon->tagset[selmon->seltags] = first_tag;
-         focus(c);
-         arrange(selmon);
-         goto cleanup;
-      }
-   }
+   /* Find the first tag the client belongs to */
+   unsigned first_tag = 1;
+   while (!(first_tag & c->tags) && first_tag < (1<<LENGTH(tags)))
+      first_tag <<= 1;
+
+   selmon->tagset[selmon->seltags] = first_tag;
+   focus(c);
+   arrange(selmon);
 
 cleanup:
-   for (vp = variants; *vp; vp ++)
-      free_not_null(*vp);
    free_not_null(selection);
 }
 
@@ -1477,12 +1475,15 @@ propertynotify(XEvent *e)
 void
 quit(const Arg *arg)
 {
-   char *variants[3];
-   variants[0] = "No";
-   variants[1] = "Yes";
-   variants[2] = NULL;
+   char *response = NULL;
 
-   char *response = run_dmenu("really quit?", variants);
+   InOutPipeT fd = dmenu_qry("really quit?");
+   if (fd.in == 0 || fd.out == 0) goto cleanup;
+   write(fd.out, "No\n", 3);
+   write(fd.out, "Yes\n", 4);
+   close(fd.out);
+
+   response = dmenu_rsp(fd);
    if (!response) goto cleanup;
 
    if (strcmp(response, "Yes") == 0)

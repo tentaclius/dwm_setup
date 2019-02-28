@@ -54,9 +54,9 @@ char* str_trim(char *str)
    return p;
 }
 
-char* run_dmenu(const char *prompt, char **variants)
+InOutPipeT dmenu_qry(const char *prompt)
 {
-   char *retstr = NULL;
+   InOutPipeT ret = {0, 0};
 
    int p_in[2];
    int p_out[2];
@@ -82,29 +82,29 @@ char* run_dmenu(const char *prompt, char **variants)
    close(p_in[0]);
    close(p_out[1]);
 
-   char buf[256 + 1];
-   buf[256] = '\0';
-
-   char **v;
-   for (v = variants; *v; v ++)
-   {
-      strncpy(buf, *v, 256);
-      write(p_in[1], buf, strlen(buf));
-      write(p_in[1], "\n", 1);
-   }
-
-   close(p_in[1]);
-
-   ssize_t size = 0;
-   size = read(p_out[0], buf, 256);
-   if (size == -1) goto cleanup;
-   buf[size] = '\0';
-   char *trimmed = str_trim(buf);
-   retstr = strdup(trimmed);
+   ret.out = p_in[1];
+   ret.in = p_out[0];
 
 cleanup:
-   close(p_in[1]);
-   close(p_out[0]);
-   return retstr;
+   return ret;
 }
 
+char* dmenu_rsp(InOutPipeT fd)
+{
+   char *retstr = NULL;
+   char *trimmed = NULL;
+
+   char buf[256 + 1];
+   buf[256] = '\0';
+   ssize_t size = 0;
+
+   size = read(fd.in, buf, 256);
+   if (size == -1) goto done;
+   buf[size] = '\0';
+   trimmed = str_trim(buf);
+   retstr = strdup(trimmed);
+
+done:
+   close(fd.in);
+   return retstr;
+}
