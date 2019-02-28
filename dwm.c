@@ -192,9 +192,12 @@ static void drawbars(void);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void findwin(const Arg *arg);
+static void findcurwin(const Arg *arg);
 static void focus(Client *c);
 static void focusin(XEvent *e);
+#if 0
 static void focusmon(const Arg *arg);
+#endif
 static void focusstack(const Arg *arg);
 static Atom getatomprop(Client *c, Atom prop);
 static int getrootptr(int *x, int *y);
@@ -212,6 +215,7 @@ static void maprequest(XEvent *e);
 static void monocle(Monitor *m);
 static void motionnotify(XEvent *e);
 static void movemouse(const Arg *arg);
+static void nexttag(const Arg *arg);
 static Client *nexttiled(Client *c);
 static void pop(Client *);
 static void propertynotify(XEvent *e);
@@ -908,10 +912,10 @@ expose(XEvent *e)
 
 void findwin(const Arg *arg)
 {
-   Client *c;
-
+   Client *c = NULL;
    char *variants[256 + 1];
    variants[256] = NULL;
+   char *selection = NULL;
    unsigned vi = 0;
    unsigned i = 0;
    char **vp;
@@ -929,11 +933,10 @@ void findwin(const Arg *arg)
    variants[vi] = NULL;
 
    /* Get the user input */
-   char *selection = run_dmenu("windows>", variants);
+   selection = run_dmenu("windows>", variants);
    if (!selection) goto cleanup;
-   char *sel = str_trim(selection);
-   if (*sel == '\0') goto cleanup;
-   vi = (unsigned) atoi(sel);
+   if (*selection == '\0') goto cleanup;
+   vi = (unsigned) atoi(selection);
 
    /* Find the selected window and give it a focus */
    for (c = selmon->clients, i = 0; c; c = c->next, i ++)
@@ -941,7 +944,7 @@ void findwin(const Arg *arg)
       if (i == vi)
       {
          unsigned first_tag = 1;
-         while (!(first_tag & c->tags) && first_tag < LENGTH(tags))
+         while (!(first_tag & c->tags) && first_tag < (1<<LENGTH(tags)))
             first_tag <<= 1;
 
          selmon->tagset[selmon->seltags] = first_tag;
@@ -955,6 +958,20 @@ cleanup:
    for (vp = variants; *vp; vp ++)
       free_not_null(*vp);
    free_not_null(selection);
+}
+
+void
+findcurwin(const Arg *arg)
+{
+   Client *c = selmon->sel;
+   
+   unsigned first_tag = 1;
+   while (!(first_tag & c->tags) && first_tag < (1<<LENGTH(tags)))
+      first_tag <<= 1;
+
+   selmon->tagset[selmon->seltags] = first_tag;
+   focus(c);
+   arrange(selmon);
 }
 
 void
@@ -992,6 +1009,7 @@ focusin(XEvent *e)
 		setfocus(selmon->sel);
 }
 
+#if 0
 void
 focusmon(const Arg *arg)
 {
@@ -1005,6 +1023,7 @@ focusmon(const Arg *arg)
 	selmon = m;
 	focus(NULL);
 }
+#endif
 
 void
 focusstack(const Arg *arg)
@@ -1458,7 +1477,19 @@ propertynotify(XEvent *e)
 void
 quit(const Arg *arg)
 {
-	running = 0;
+   char *variants[3];
+   variants[0] = "No";
+   variants[1] = "Yes";
+   variants[2] = NULL;
+
+   char *response = run_dmenu("really quit?", variants);
+   if (!response) goto cleanup;
+
+   if (strcmp(response, "Yes") == 0)
+      running = 0;
+
+cleanup:
+   free_not_null(response);
 }
 
 Monitor *
@@ -1635,6 +1666,7 @@ void run_app(const Arg *arg)
    buf[1024] = '\0';
 
    fgets(buf, 1024, pp);
+   if (buf[0] == '\0') goto cleanup;
 
    // Find the last entry (the .desktop file name)
    char *p = rindex(buf, APP_CACHE_SEPARATOR);
@@ -2551,6 +2583,17 @@ view(const Arg *arg)
 
 	focus(NULL);
 	arrange(selmon);
+}
+
+void
+nexttag(const Arg *arg)
+{
+   if (arg->i >= 0 && !(selmon->tagset[selmon->seltags] & (1<<8)))
+      selmon->tagset[selmon->seltags] <<= arg->i;
+   else if (arg->i < 0 && !(selmon->tagset[selmon->seltags] & 1))
+      selmon->tagset[selmon->seltags] >>= -arg->i;
+   focus(NULL);
+   arrange(selmon);
 }
 
 Client *

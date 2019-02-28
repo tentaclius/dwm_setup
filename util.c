@@ -99,9 +99,8 @@ char* run_dmenu(const char *prompt, char **variants)
    size = read(p_out[0], buf, 256);
    if (size == -1) goto cleanup;
    buf[size] = '\0';
-   retstr = (char*) malloc(strlen(buf) + 1);
-   if (!retstr) goto cleanup;
-   strcpy(retstr, buf);
+   char *trimmed = str_trim(buf);
+   retstr = strdup(trimmed);
 
 cleanup:
    close(p_in[1]);

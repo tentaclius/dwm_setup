@@ -11,6 +11,11 @@
 #define UTF_INVALID 0xFFFD
 #define UTF_SIZ     4
 
+/* A workaround for workstation build */
+#if !defined(FC_COLOR)
+#define FC_COLOR "color"
+#endif
+
 static const unsigned char utfbyte[UTF_SIZ + 1] = {0x80,    0, 0xC0, 0xE0, 0xF0};
 static const unsigned char utfmask[UTF_SIZ + 1] = {0xC0, 0x80, 0xE0, 0xF0, 0xF8};
 static const long utfmin[UTF_SIZ + 1] = {       0,    0,  0x80,  0x800,  0x10000};
