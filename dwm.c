@@ -924,10 +924,12 @@ void findwin(const Arg *arg)
    buf[256] = '\0';
 
    /* Run dmenu and pass the list of client names to it*/
-   InOutPipeT pipe = dmenu_qry("windows>");
-   for (c = selmon->clients, i = 0; c && i < 256; c = c->next, i ++)
+   InOutPipeT pipe = dmenu_qry("windows>", 10);
+   for (c = selmon->clients, i = 0;
+        c && i < 256;
+        c = c->next, i ++)
    {
-      snprintf(buf, 256, "%3u. ", i);
+      snprintf(buf, 256, "%u. ", i);
       write(pipe.out, buf, strlen(buf));
       write(pipe.out, c->name, strlen(c->name));
       write(pipe.out, "\n", 1);
@@ -950,7 +952,8 @@ void findwin(const Arg *arg)
    while (!(first_tag & c->tags) && first_tag < (1<<LENGTH(tags)))
       first_tag <<= 1;
 
-   selmon->tagset[selmon->seltags] = first_tag;
+   Arg a = {.ui = first_tag};
+   view(&a);
    focus(c);
    arrange(selmon);
 
@@ -967,7 +970,8 @@ findcurwin(const Arg *arg)
    while (!(first_tag & c->tags) && first_tag < (1<<LENGTH(tags)))
       first_tag <<= 1;
 
-   selmon->tagset[selmon->seltags] = first_tag;
+   Arg a = {.ui = first_tag};
+   view(&a);
    focus(c);
    arrange(selmon);
 }
@@ -1477,7 +1481,7 @@ quit(const Arg *arg)
 {
    char *response = NULL;
 
-   InOutPipeT fd = dmenu_qry("really quit?");
+   InOutPipeT fd = dmenu_qry("really quit?", 0);
    if (fd.in == 0 || fd.out == 0) goto cleanup;
    write(fd.out, "No\n", 3);
    write(fd.out, "Yes\n", 4);
@@ -2728,6 +2732,16 @@ main(int argc, char *argv[])
 #endif /* __OpenBSD__ */
 	scan();
    runAutostart();
+
+   // Set grid layout for the 0'th tag
+   Arg a = {.ui = ~0};
+   view(&a);
+   a.v = &layouts[3];
+   setlayout(&a);
+   a.ui = 1;
+   view(&a);
+
+   // Run
 	run();
 	cleanup();
 	XCloseDisplay(dpy);

@@ -54,7 +54,7 @@ char* str_trim(char *str)
    return p;
 }
 
-InOutPipeT dmenu_qry(const char *prompt)
+InOutPipeT dmenu_qry(const char *prompt, unsigned lines)
 {
    InOutPipeT ret = {0, 0};
 
@@ -75,7 +75,17 @@ InOutPipeT dmenu_qry(const char *prompt)
       if (dup2(p_in[0], STDIN_FILENO) == -1) goto cleanup;
       if (dup2(p_out[1], STDOUT_FILENO) == -1) goto cleanup;
 
-      execlp("dmenu", "dmenu", "-i", "-p", prompt, NULL);
+      if (lines == 0)
+         execlp("dmenu", "dmenu", "-i", "-p", prompt, NULL);
+      else
+      {
+         char str[10 + 1];
+         str[10] = '\0';
+
+         snprintf(str, 10, "%u", lines);
+
+         execlp("dmenu", "dmenu", "-i", "-p", prompt, "-l", str, NULL);
+      }
       exit(1);
    }
 

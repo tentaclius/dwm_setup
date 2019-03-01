@@ -15,5 +15,5 @@ typedef struct {
    int out;
 } InOutPipeT;
 
-InOutPipeT dmenu_qry(const char *prompt);
+InOutPipeT dmenu_qry(const char *prompt, unsigned lines);
 char* dmenu_rsp(InOutPipeT fd);
