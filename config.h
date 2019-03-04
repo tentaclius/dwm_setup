@@ -76,6 +76,7 @@ static const char *lockscreencmd[] = { "gnome-screensaver-command", "-l", NULL }
 static Key keys[] = {
 	/* modifier                     key        function        argument */
    { MODKEY,                       XK_apostrophe, findwin,    {0} },
+   { MODKEY|ShiftMask,             XK_apostrophe, findwinontag, {0} },
    { MODKEY|ControlMask,           XK_apostrophe, pullwin,    {0} },
    { MODKEY|ShiftMask,             XK_f,      findcurwin,     {0} },
    { MODKEY|ControlMask,           XK_l,      spawn,          {.v = lockscreencmd } },

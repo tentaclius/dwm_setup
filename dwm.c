@@ -192,6 +192,7 @@ static void drawbars(void);
 static void enternotify(XEvent *e);
 static void expose(XEvent *e);
 static void findwin(const Arg *arg);
+static void findwinontag(const Arg *arg);
 static void findcurwin(const Arg *arg);
 static void focus(Client *c);
 static void focusin(XEvent *e);
@@ -955,6 +956,52 @@ void findwin(const Arg *arg)
 
    Arg a = {.ui = first_tag};
    view(&a);
+   focus(c);
+   arrange(selmon);
+
+cleanup:
+   free_not_null(selection);
+}
+
+void findwinontag(const Arg *arg)
+{
+   Client *c = NULL;
+   char *selection = NULL;
+   unsigned i = 0;
+
+   Client *c_index[256 + 1];
+   c_index[256] = NULL;
+   size_t ccount = 0;
+
+   char buf[10 + 1];
+   buf[10] = '\0';
+
+   /* Run dmenu and pass the list of client names to it*/
+   InOutPipeT pipe = dmenu_qry("windows>", 10);
+   for (c = selmon->clients, i = 0;
+        c && i < 256;
+        c = c->next)
+   {
+      if (c->tags & selmon->tagset[selmon->seltags])
+      {
+         snprintf(buf, 10, "%u. ", i);
+         write(pipe.out, buf, strlen(buf));
+         write(pipe.out, c->name, strlen(c->name));
+         write(pipe.out, "\n", 1);
+         c_index[i++] = c;
+      }
+   }
+   ccount = i;
+   close(pipe.out);
+
+   /* Get the user input */
+   selection = dmenu_rsp(pipe);
+   if (!selection || *selection == '\0') goto cleanup;
+   i = (unsigned) atoi(selection);
+   if (i >= ccount) goto cleanup;
+
+   c = c_index[i];
+
    focus(c);
    arrange(selmon);
 
