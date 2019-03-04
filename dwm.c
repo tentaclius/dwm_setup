@@ -2693,7 +2693,7 @@ nametag(const Arg *arg)
    int i;
 
    errno = 0; // popen(3p) says on failure it "may" set errno
-   if(!(f = popen("dmenu < /dev/null", "r"))) {
+   if(!(f = popen("dmenu -p 'tag name>' < /dev/null", "r"))) {
       fprintf(stderr, "dwm: popen 'dmenu < /dev/null' failed%s%s\n", errno ? ": " : "", errno ? strerror(errno) : "");
       return;
    }
