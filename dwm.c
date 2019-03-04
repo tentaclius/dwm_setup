@@ -219,6 +219,7 @@ static void nametag(const Arg *arg);
 static void nexttag(const Arg *arg);
 static Client *nexttiled(Client *c);
 static void pop(Client *);
+static void pullwin(const Arg *arg);
 static void propertynotify(XEvent *e);
 static void quit(const Arg *arg);
 static Monitor *recttomon(int x, int y, int w, int h);
@@ -1474,6 +1475,51 @@ propertynotify(XEvent *e)
 		if (ev->atom == netatom[NetWMWindowType])
 			updatewindowtype(c);
 	}
+}
+
+void pullwin(const Arg *arg)
+{
+   Client *c = NULL;
+   char *selection = NULL;
+   unsigned i = 0;
+
+   Client *c_index[256 + 1];
+   c_index[256] = NULL;
+   size_t ccount = 0;
+
+   char buf[10 + 1];
+   buf[10] = '\0';
+
+   /* Run dmenu and pass the list of client names to it*/
+   InOutPipeT pipe = dmenu_qry("windows>", 10);
+   for (c = selmon->clients, i = 0;
+        c && i < 256;
+        c = c->next, i ++)
+   {
+      snprintf(buf, 10, "%u. ", i);
+      write(pipe.out, buf, strlen(buf));
+      write(pipe.out, c->name, strlen(c->name));
+      write(pipe.out, "\n", 1);
+      c_index[i] = c;
+   }
+   ccount = i;
+   close(pipe.out);
+
+   /* Get the user input */
+   selection = dmenu_rsp(pipe);
+   if (!selection || *selection == '\0') goto cleanup;
+   i = (unsigned) atoi(selection);
+   if (i >= ccount) goto cleanup;
+
+   /* Pull the window to the current tag */
+   c = c_index[i];
+   c->tags |= selmon->tagset[selmon->seltags];
+
+   focus(c);
+   arrange(selmon);
+
+cleanup:
+   free_not_null(selection);
 }
 
 void
