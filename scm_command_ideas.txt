@@ -1,0 +1,34 @@
+<tag>: string name or int index or keyword :current|:next|:prev
+<client>: string title or int index
+
+tag
+   :list
+   :current [:id|:name]
+   :next
+   :prev
+   :include <tag>
+   :exclude <tag>
+
+client
+   :list
+   :current
+   :next
+   :prev
+   :close <client>
+
+key
+   :list
+   :new
+   :forget
+
+layout
+   :list
+   :current
+   :next
+   :prev
+   :master-inc
+   :master-dec
+   :master-widen
+   :master-shrink
+
+
