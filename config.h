@@ -2,6 +2,7 @@
 
 #define APP_CACHE "~/.cache/applications.cache"
 #define APP_CACHE_SEPARATOR '/'
+#define MAX_TAGLEN 16
 
 /* appearance */
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
@@ -26,7 +27,7 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-static const char *tags[] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static char tags[][MAX_TAGLEN] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
 static const Rule rules[0];
 #if 0
@@ -79,6 +80,7 @@ static Key keys[] = {
    { MODKEY|ControlMask,           XK_l,      spawn,          {.v = lockscreencmd } },
    { MODKEY,                       XK_comma,  nexttag,        {.i = -1 } },
    { MODKEY,                       XK_period, nexttag,        {.i = +1 } },
+   { MODKEY,                       XK_n,      nametag,        {0} },
 
 	{ MODKEY,                       XK_r,      spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
