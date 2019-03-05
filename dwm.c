@@ -1537,17 +1537,20 @@ void pullwin(const Arg *arg)
    char buf[10 + 1];
    buf[10] = '\0';
 
-   /* Run dmenu and pass the list of client names to it*/
+   /* Run dmenu and pass the list of client names that do not belong to the current tag */
    InOutPipeT pipe = dmenu_qry("windows>", 10);
    for (c = selmon->clients, i = 0;
         c && i < 256;
         c = c->next, i ++)
    {
-      snprintf(buf, 10, "%u. ", i);
-      write(pipe.out, buf, strlen(buf));
-      write(pipe.out, c->name, strlen(c->name));
-      write(pipe.out, "\n", 1);
-      c_index[i] = c;
+      if (!(c->tags & selmon->tagset[selmon->seltags]))
+      {
+         snprintf(buf, 10, "%u. ", i);
+         write(pipe.out, buf, strlen(buf));
+         write(pipe.out, c->name, strlen(c->name));
+         write(pipe.out, "\n", 1);
+         c_index[i] = c;
+      }
    }
    ccount = i;
    close(pipe.out);
