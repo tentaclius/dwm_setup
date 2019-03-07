@@ -927,7 +927,7 @@ void findwin(const Arg *arg)
    buf[10] = '\0';
 
    /* Run dmenu and pass the list of client names to it*/
-   InOutPipeT pipe = dmenu_qry("windows>", 10);
+   InOutPipeT pipe = dmenu_qry("find window>", 10);
    for (c = selmon->clients, i = 0;
         c && i < 256;
         c = c->next, i ++)
@@ -977,7 +977,7 @@ void findwinontag(const Arg *arg)
    buf[10] = '\0';
 
    /* Run dmenu and pass the list of client names to it*/
-   InOutPipeT pipe = dmenu_qry("windows>", 10);
+   InOutPipeT pipe = dmenu_qry("window on this tag>", 10);
    for (c = selmon->clients, i = 0;
         c && i < 256;
         c = c->next)
@@ -1538,7 +1538,7 @@ void pullwin(const Arg *arg)
    buf[10] = '\0';
 
    /* Run dmenu and pass the list of client names that do not belong to the current tag */
-   InOutPipeT pipe = dmenu_qry("windows>", 10);
+   InOutPipeT pipe = dmenu_qry("pull window>", 10);
    for (c = selmon->clients, i = 0;
         c && i < 256;
         c = c->next, i ++)
