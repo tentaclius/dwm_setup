@@ -196,6 +196,7 @@ static void findwinontag(const Arg *arg);
 static void findcurwin(const Arg *arg);
 static void focus(Client *c);
 static void focusin(XEvent *e);
+static void focusnth(const Arg *arg);
 #if 0
 static void focusmon(const Arg *arg);
 #endif
@@ -1057,6 +1058,32 @@ focusin(XEvent *e)
 
 	if (selmon->sel && ev->window != selmon->sel->win)
 		setfocus(selmon->sel);
+}
+
+void
+focusnth(const Arg *arg)
+{
+   Client *c = NULL;
+   unsigned i = 0;
+
+   for (c = selmon->clients, i = 0;
+        c && i < 256;
+        c = c->next)
+   {
+      if (c->tags & selmon->tagset[selmon->seltags])
+      {
+         if (i == arg->ui)
+            break;
+         else
+            i ++;
+      }
+   }
+
+   if (c != NULL)
+   {
+      focus(c);
+      arrange(selmon);
+   }
 }
 
 #if 0
