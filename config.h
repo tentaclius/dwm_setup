@@ -88,6 +88,7 @@ static Key keys[] = {
    { MODKEY,                       XK_n,      nametag,        {0} },
    { MODKEY,                       XK_minus,  spawn,          {.v = volumedecr } },
    { MODKEY,                       XK_equal,  spawn,          {.v = volumeincr } },
+   { Mod1Mask,                     XK_Tab,    prevwin,        {0} },
 
 	{ MODKEY,                       XK_r,      spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },

@@ -222,6 +222,7 @@ static void nexttag(const Arg *arg);
 static Client *nexttiled(Client *c);
 static void pop(Client *);
 static void pullwin(const Arg *arg);
+static void prevwin(const Arg *arg);
 static void propertynotify(XEvent *e);
 static void quit(const Arg *arg);
 static Monitor *recttomon(int x, int y, int w, int h);
@@ -328,6 +329,8 @@ struct Pertag {
 	unsigned int sellts[LENGTH(tags) + 1]; /* selected layouts */
 	const Layout *ltidxs[LENGTH(tags) + 1][2]; /* matrix of tags and layouts indexes  */
 	int showbars[LENGTH(tags) + 1]; /* display bar for the current tag */
+
+   Client *prevwin;
 };
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
@@ -752,6 +755,8 @@ createmon(void)
 	m->pertag = ecalloc(1, sizeof(Pertag));
 	m->pertag->curtag = m->pertag->prevtag = 1;
 
+   m->pertag->prevwin = NULL;
+
 	for (i = 0; i <= LENGTH(tags); i++) {
 		m->pertag->nmasters[i] = m->nmaster;
 		m->pertag->mfacts[i] = m->mfact;
@@ -1046,6 +1051,8 @@ focus(Client *c)
 		XSetInputFocus(dpy, root, RevertToPointerRoot, CurrentTime);
 		XDeleteProperty(dpy, root, netatom[NetActiveWindow]);
 	}
+
+   selmon->pertag->prevwin = selmon->sel;
 	selmon->sel = c;
 	drawbars();
 }
@@ -2711,6 +2718,16 @@ view(const Arg *arg)
 
 	focus(NULL);
 	arrange(selmon);
+}
+
+void
+prevwin(const Arg *arg)
+{
+   if (selmon->pertag->prevwin != NULL)
+   {
+      focus(selmon->pertag->prevwin);
+      arrange(selmon);
+   }
 }
 
 void
