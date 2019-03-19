@@ -319,6 +319,7 @@ static Display *dpy;
 static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
+static int restart = 0;
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -1626,12 +1627,18 @@ quit(const Arg *arg)
    if (fd.in == 0 || fd.out == 0) goto cleanup;
    write(fd.out, "No\n", 3);
    write(fd.out, "Yes\n", 4);
+   write(fd.out, "Restart\n", 8);
    close(fd.out);
 
    response = dmenu_rsp(fd);
    if (!response) goto cleanup;
 
-   if (strcmp(response, "Yes") == 0)
+   if (strcmp(response, "Restart") == 0) {
+      restart = 1;
+      running = 0;
+   }
+
+   else if (strcmp(response, "Yes") == 0)
       running = 0;
 
 cleanup:
@@ -2160,10 +2167,6 @@ tile(Monitor *m)
 
 	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
    {
-      FILE *log = fopen("/tmp/dwm.log", "a");
-      fprintf(log, "cpt = %u; n = %u; i = %u\n", cpt, n, i);
-      fclose(log);
-
 		if (i < m->nmaster) {
 			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
 			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
@@ -2948,5 +2951,9 @@ main(int argc, char *argv[])
 	run();
 	cleanup();
 	XCloseDisplay(dpy);
+
+   if (restart)
+      execlp("/usr/local/bin/dwm", "/usr/local/bin/dwm", NULL);
+
 	return EXIT_SUCCESS;
 }
