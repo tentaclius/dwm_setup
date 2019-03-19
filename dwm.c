@@ -179,6 +179,7 @@ static void checkotherwm(void);
 static void cleanup(void);
 static void cleanupmon(Monitor *mon);
 static void clientmessage(XEvent *e);
+static void climit(const Arg *arg);
 static void configure(Client *c);
 static void configurenotify(XEvent *e);
 static void configurerequest(XEvent *e);
@@ -636,6 +637,16 @@ clientmessage(XEvent *e)
 		if (c != selmon->sel && !c->isurgent)
 			seturgent(c, 1);
 	}
+}
+
+void
+climit(const Arg *arg)
+{
+   if (arg->i == 0)
+      cpt = 0;
+   else if (arg->i + (int) cpt >= 0)
+      cpt += arg->i;
+   arrange(selmon);
 }
 
 void
@@ -2139,20 +2150,37 @@ tile(Monitor *m)
 	if (n == 0)
 		return;
 
+   if (cpt > 0 && n > cpt + m->nmaster)
+      n = cpt + m->nmaster;
+
 	if (n > m->nmaster)
 		mw = m->nmaster ? m->ww * m->mfact : 0;
 	else
 		mw = m->ww;
+
 	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+   {
+      FILE *log = fopen("/tmp/dwm.log", "a");
+      fprintf(log, "cpt = %u; n = %u; i = %u\n", cpt, n, i);
+      fclose(log);
+
 		if (i < m->nmaster) {
 			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
 			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
 			my += HEIGHT(c);
+      } else if (cpt > 0 && i >= n) {
+         h = m->wh / cpt;
+         resize(c, 
+               m->wx + mw,
+               m->wy + m->wh - h,
+               m->ww - mw - (2*c->bw),
+               h - (2*c->bw), 0);
 		} else {
 			h = (m->wh - ty) / (n - i);
 			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
 			ty += HEIGHT(c);
 		}
+   }
 }
 
 void

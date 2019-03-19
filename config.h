@@ -29,6 +29,8 @@ static const char *colors[][3]      = {
 /* tagging */
 static char tags[][MAX_TAGLEN] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
+static unsigned cpt = 4; /* clients per tag (in stack area) */
+
 static const Rule rules[0];
 #if 0
 = {
@@ -89,6 +91,9 @@ static Key keys[] = {
    { MODKEY,                       XK_minus,  spawn,          {.v = volumedecr } },
    { MODKEY,                       XK_equal,  spawn,          {.v = volumeincr } },
    { Mod1Mask,                     XK_Tab,    prevwin,        {0} },
+   { MODKEY|ShiftMask,             XK_comma,  climit,         {.i = +1 } },
+   { MODKEY|ShiftMask,             XK_period, climit,         {.i = -1 } },
+   { MODKEY|ShiftMask,             XK_slash,  climit,         {.i = 0 } },
 
 	{ MODKEY,                       XK_r,      spawn,          {.v = dmenucmd } },
 	{ MODKEY,                       XK_Return, spawn,          {.v = termcmd } },
