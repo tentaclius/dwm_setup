@@ -62,8 +62,8 @@ static const Layout layouts[] = {
 #define TAGKEYS(KEY,TXT,TAG) \
 	{ MODKEY,                       KEY,      view,           "tag-view " TXT, {.ui = 1 << TAG} }, \
 	{ MODKEY|ControlMask,           KEY,      toggleview,     "tag-toggle " TXT, {.ui = 1 << TAG} }, \
-	{ MODKEY|ShiftMask,             KEY,      tag,            "window-move-to-tag " TXT, {.ui = 1 << TAG} }, \
-	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      "tag-toggle " TXT, {.ui = 1 << TAG} }, \
+	{ MODKEY|ShiftMask,             KEY,      tag,            "win-tag-set " TXT, {.ui = 1 << TAG} }, \
+	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      "win-tag-toggle " TXT, {.ui = 1 << TAG} }, \
    { MODKEY|Mod1Mask,              KEY,      focusnth,       "focus-nth " TXT, {.ui = TAG} },
 
 /* helper for spawning shell commands in the pre dwm-5.0 fashion */
@@ -80,30 +80,30 @@ static const char *volumedecr[] = { "volume_down", NULL };
 
 static Key keys[] = {
 	/* modifier                     key        function        argument */
-   { MODKEY,                       XK_apostrophe, findwin,    "window-find", {0} },
-   { MODKEY|Mod1Mask,              XK_apostrophe, findwinontag, "window-find-on-tag", {0} },
-   { MODKEY|ShiftMask,             XK_apostrophe, pullwin,    "window-pull", {0} },
-   { MODKEY|ShiftMask,             XK_f,      findcurwin,     "window-find-current", {0} },
+   { MODKEY,                       XK_apostrophe, findwin,    "win-find", {0} },
+   { MODKEY|Mod1Mask,              XK_apostrophe, findwinontag, "win-find-on-tag", {0} },
+   { MODKEY|ShiftMask,             XK_apostrophe, pullwin,    "win-pull", {0} },
+   { MODKEY|ShiftMask,             XK_f,      findcurwin,     "win-find-first-tag", {0} },
    { MODKEY|ControlMask,           XK_l,      spawn,          "screen-lock", {.v = lockscreencmd } },
    { MODKEY,                       XK_comma,  nexttag,        "tag-prev", {.i = -1 } },
    { MODKEY,                       XK_period, nexttag,        "tag-next", {.i = +1 } },
-   { MODKEY|ShiftMask,             XK_period, tonexttag,      "window-move-to-next-tag", {.i = +1 } },
-   { MODKEY|ShiftMask,             XK_comma,  tonexttag,      "window-move-to-prev-tag", {.i = -1 } },
+   { MODKEY|ShiftMask,             XK_period, tonexttag,      "win-to-next-tag", {.i = +1 } },
+   { MODKEY|ShiftMask,             XK_comma,  tonexttag,      "win-to-prev-tag", {.i = -1 } },
    { MODKEY,                       XK_n,      nametag,        "tag-rename", {0} },
-   { MODKEY,                       XK_minus,  spawn,          "volume-decrease", {.v = volumedecr } },
-   { MODKEY,                       XK_equal,  spawn,          "volume-increase", {.v = volumeincr } },
-   { Mod1Mask,                     XK_Tab,    prevwin,        "window-focus-previous", {0} },
+   { MODKEY,                       XK_minus,  spawn,          "volume-decr", {.v = volumedecr } },
+   { MODKEY,                       XK_equal,  spawn,          "volume-incr", {.v = volumeincr } },
+   { Mod1Mask,                     XK_Tab,    prevwin,        "win-focus-prev", {0} },
    { MODKEY|Mod1Mask,              XK_h,      climit,         "layout-stack-incr", {.i = +1 } },
    { MODKEY|Mod1Mask,              XK_l,      climit,         "layout-stack-decr", {.i = -1 } },
    { MODKEY|Mod1Mask,              XK_slash,  climit,         "layout-stack-inf", {.i = 0 } },
-   { MODKEY,                       XK_p,      run_app,        "run-application", {0} },
+   { MODKEY,                       XK_p,      run_app,        "run-app", {0} },
    { MODKEY,                       XK_x,      runcmd,         "", {0} },
 
-	{ MODKEY,                       XK_r,      spawn,          "run-command", {.v = dmenucmd } },
-	{ MODKEY,                       XK_Return, spawn,          "run-terminal", {.v = termcmd } },
+	{ MODKEY,                       XK_r,      spawn,          "run-cmd", {.v = dmenucmd } },
+	{ MODKEY,                       XK_Return, spawn,          "run-term", {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      "bar-toggle", {0} },
-	{ MODKEY,                       XK_j,      focusstack,     "window-focus-next", {.i = +1 } },
-	{ MODKEY,                       XK_k,      focusstack,     "window-focus-prev", {.i = -1 } },
+	{ MODKEY,                       XK_j,      focusstack,     "win-focus-next", {.i = +1 } },
+	{ MODKEY,                       XK_k,      focusstack,     "win-focus-prev", {.i = -1 } },
 	{ MODKEY|ShiftMask,             XK_h,      incnmaster,     "layout-master-incr", {.i = +1 } },
 	{ MODKEY|ShiftMask,             XK_l,      incnmaster,     "layout-master-decr", {.i = -1 } },
 	{ MODKEY,                       XK_h,      setmfact,       "layout-factor-decr", {.f = -0.05} },
@@ -116,9 +116,9 @@ static Key keys[] = {
 	{ MODKEY,                       XK_m,      setlayout,      "layout-floating", {.v = &layouts[2]} },
    { MODKEY,                       XK_g,      setlayout,      "layout-grid", {.v = &layouts[3]} },
 	{ MODKEY,                       XK_space,  setlayout,      "layout-toggle", {0} },
-	{ MODKEY|ShiftMask,             XK_space,  togglefloating, "window-floating-toggle", {0} },
+	{ MODKEY|ShiftMask,             XK_space,  togglefloating, "win-float-toggle", {0} },
 	{ MODKEY,                       XK_0,      view,           "tag-view 0", {.ui = ~0 } },
-	{ MODKEY|ShiftMask,             XK_0,      tag,            "window-set-tag 0", {.ui = ~0 } },
+	{ MODKEY|ShiftMask,             XK_0,      tag,            "win-tag-set 0", {.ui = ~0 } },
    { MODKEY|Mod1Mask,              XK_0,      focusnth,       "focus-nth 9", {.ui = 9 } },
 	//{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
 	//{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
