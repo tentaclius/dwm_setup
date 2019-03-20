@@ -29,7 +29,7 @@ static const char *colors[][3]      = {
 /* tagging */
 static char tags[][MAX_TAGLEN] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
-static unsigned cpt = 4; /* clients per tag (in stack area) */
+static unsigned cpt = 2; /* clients per tag (in stack area) */
 
 static const Rule rules[0];
 #if 0
