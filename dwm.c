@@ -121,6 +121,7 @@ typedef struct {
 	unsigned int mod;
 	KeySym keysym;
 	void (*func)(const Arg *);
+   const char *cmdname;
 	const Arg arg;
 } Key;
 
@@ -236,6 +237,7 @@ static void resizerequest(XEvent *e);
 static void restack(Monitor *m);
 static void run(void);
 static void run_app(const Arg *arg);
+static void runcmd(const Arg *arg);
 static void scan(void);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void sendmon(Client *c, Monitor *m);
@@ -278,6 +280,7 @@ static void view(const Arg *arg);
 static Client *wintoclient(Window w);
 static Monitor *wintomon(Window w);
 static Client *wintosystrayicon(Window w);
+static void tonexttag(const Arg *arg);
 static int xerror(Display *dpy, XErrorEvent *ee);
 static int xerrordummy(Display *dpy, XErrorEvent *ee);
 static int xerrorstart(Display *dpy, XErrorEvent *ee);
@@ -645,7 +648,7 @@ climit(const Arg *arg)
 {
    if (arg->i == 0)
       cpt = 0;
-   else if (arg->i + (int) cpt >= 0)
+   else if (arg->i + (int) cpt > 0)
       cpt += arg->i;
    arrange(selmon);
 }
@@ -1016,7 +1019,17 @@ void findwinontag(const Arg *arg)
          snprintf(buf, 10, "%u. ", i);
          write(pipe.out, buf, strlen(buf));
          write(pipe.out, c->name, strlen(c->name));
-         write(pipe.out, "\n", 1);
+         write(pipe.out, " [", 2);
+
+         unsigned tagi;
+         for (tagi = 0; tagi < LENGTH(tags); tagi ++) {
+            if (c->tags & (1<<tagi)) {
+               snprintf(buf, 256, "%u", tagi + 1);
+               write(pipe.out, buf, strlen(buf));
+            }
+         }
+
+         write(pipe.out, "] \n", 3);
          c_index[i++] = c;
       }
    }
@@ -1847,6 +1860,38 @@ void run_app(const Arg *arg)
 
 cleanup:
    if (pp) fclose(pp);
+}
+
+void
+runcmd(const Arg *arg)
+{
+   char *selection = NULL;
+   InOutPipeT pipe = dmenu_qry("run command>", 0);
+   if (pipe.out == 0) goto cleanup;
+
+   unsigned i;
+   for (i = 0; i < LENGTH(keys); i ++)
+   {
+      if (keys[i].cmdname[0] != '\0') {
+         write(pipe.out, keys[i].cmdname, strlen(keys[i].cmdname));
+         write(pipe.out, "\n", 1);
+      }
+   }
+   close(pipe.out);
+
+   /* Get the user input */
+   selection = dmenu_rsp(pipe);
+   if (!selection || *selection == '\0') goto cleanup;
+
+   for (i = 0; i < LENGTH(keys); i ++) {
+      if (strcmp(selection, keys[i].cmdname) == 0) {
+         keys[i].func(&keys[i].arg);
+         goto cleanup;
+      }
+   }
+
+cleanup:
+   free_not_null(selection);
 }
 
 void
@@ -2829,6 +2874,24 @@ wintoclient(Window w)
 			if (c->win == w)
 				return c;
 	return NULL;
+}
+
+void
+tonexttag(const Arg *arg)
+{
+   Client *c = selmon->sel;
+   if (c == NULL)
+      nexttag(arg);
+
+   else {
+      if (arg->i > 0 && !(selmon->tagset[selmon->seltags] & (1 << (LENGTH(tags) - 1))))
+         c->tags = (c->tags | ((c->tags & selmon->tagset[selmon->seltags]) << arg->i)) ^ selmon->tagset[selmon->seltags];
+      else if (arg->i < 0 && !(selmon->tagset[selmon->seltags] & 1))
+         c->tags = (c->tags | ((c->tags & selmon->tagset[selmon->seltags]) >> -arg->i)) ^ selmon->tagset[selmon->seltags];
+
+      nexttag(arg);
+      focus(c);
+   }
 }
 
 Client *
