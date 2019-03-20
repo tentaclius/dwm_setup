@@ -941,8 +941,8 @@ void findwin(const Arg *arg)
    c_index[256] = NULL;
    size_t ccount = 0;
 
-   char buf[10 + 1];
-   buf[10] = '\0';
+   char buf[256 + 1];
+   buf[256] = '\0';
 
    /* Run dmenu and pass the list of client names to it*/
    InOutPipeT pipe = dmenu_qry("find window>", 10);
@@ -950,10 +950,21 @@ void findwin(const Arg *arg)
         c && i < 256;
         c = c->next, i ++)
    {
-      snprintf(buf, 10, "%u. ", i);
+
+      snprintf(buf, 256, "%u. ", i);
       write(pipe.out, buf, strlen(buf));
       write(pipe.out, c->name, strlen(c->name));
-      write(pipe.out, "\n", 1);
+      write(pipe.out, " [", 2);
+
+      unsigned tagi;
+      for (tagi = 0; tagi < LENGTH(tags); tagi ++) {
+         if (c->tags & (1<<tagi)) {
+            snprintf(buf, 256, "%u", tagi + 1);
+            write(pipe.out, buf, strlen(buf));
+         }
+      }
+
+      write(pipe.out, "] \n", 3);
       c_index[i] = c;
    }
    ccount = i;
