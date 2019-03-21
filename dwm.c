@@ -1019,17 +1019,7 @@ void findwinontag(const Arg *arg)
          snprintf(buf, 10, "%u. ", i);
          write(pipe.out, buf, strlen(buf));
          write(pipe.out, c->name, strlen(c->name));
-         write(pipe.out, " [", 2);
-
-         unsigned tagi;
-         for (tagi = 0; tagi < LENGTH(tags); tagi ++) {
-            if (c->tags & (1<<tagi)) {
-               snprintf(buf, 256, "%u", tagi + 1);
-               write(pipe.out, buf, strlen(buf));
-            }
-         }
-
-         write(pipe.out, "] \n", 3);
+         write(pipe.out, "\n", 1);
          c_index[i++] = c;
       }
    }
@@ -1618,7 +1608,17 @@ void pullwin(const Arg *arg)
          snprintf(buf, 10, "%u. ", i);
          write(pipe.out, buf, strlen(buf));
          write(pipe.out, c->name, strlen(c->name));
-         write(pipe.out, "\n", 1);
+         write(pipe.out, " [", 2);
+
+         unsigned tagi;
+         for (tagi = 0; tagi < LENGTH(tags); tagi ++) {
+            if (c->tags & (1<<tagi)) {
+               snprintf(buf, 256, "%u", tagi + 1);
+               write(pipe.out, buf, strlen(buf));
+            }
+         }
+
+         write(pipe.out, "] \n", 3);
          c_index[i] = c;
       }
    }
