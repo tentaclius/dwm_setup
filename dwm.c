@@ -2213,8 +2213,10 @@ tile(Monitor *m)
 	if (n == 0)
 		return;
 
-   if (cpt > 0 && n > cpt + m->nmaster)
+   if (cpt > 0 && n > cpt + m->nmaster) {
+      snprintf(m->ltsymbol, sizeof m->ltsymbol, "%u/%u/%u", m->nmaster, cpt, n);
       n = cpt + m->nmaster;
+   }
 
 	if (n > m->nmaster)
 		mw = m->nmaster ? m->ww * m->mfact : 0;
