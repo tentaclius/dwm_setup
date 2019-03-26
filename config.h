@@ -98,6 +98,8 @@ static Key keys[] = {
    { MODKEY|Mod1Mask,              XK_slash,  climit,         "layout-stack-inf", {.i = 0 } },
    { MODKEY,                       XK_p,      run_app,        "run-app", {0} },
    { MODKEY,                       XK_x,      runcmd,         "", {0} },
+   { MODKEY|ShiftMask,             XK_j,      rotatestack,    "rot-down", {.i = 1} },
+   { MODKEY|ShiftMask,             XK_k,      rotatestack,    "rot-up", {.i = -1} },
 
 	{ MODKEY,                       XK_r,      spawn,          "run-cmd", {.v = dmenucmd } },
 	{ MODKEY,                       XK_Return, spawn,          "run-term", {.v = termcmd } },

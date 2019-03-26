@@ -192,6 +192,8 @@ static Monitor *dirtomon(int dir);
 static void drawbar(Monitor *m);
 static void drawbars(void);
 static void enternotify(XEvent *e);
+static void enqueue(Client *c);
+static void enqueuestack(Client *c);
 static void expose(XEvent *e);
 static void findwin(const Arg *arg);
 static void findwinontag(const Arg *arg);
@@ -235,6 +237,7 @@ static void resizeclient(Client *c, int x, int y, int w, int h);
 static void resizemouse(const Arg *arg);
 static void resizerequest(XEvent *e);
 static void restack(Monitor *m);
+static void rotatestack(const Arg *arg);
 static void run(void);
 static void run_app(const Arg *arg);
 static void runcmd(const Arg *arg);
@@ -337,6 +340,12 @@ struct Pertag {
 
    Client *prevwin;
 };
+
+#define DEBUG(...) { \
+   FILE *DBGfd = fopen("/tmp/dwm.log", "a"); \
+   fprintf(DBGfd, __VA_ARGS__); \
+   fclose(DBGfd); \
+}
 
 /* compile-time check if all tags fit into an unsigned int bit array. */
 struct NumTags { char limitexceeded[LENGTH(tags) > 31 ? -1 : 1]; };
@@ -945,6 +954,28 @@ enternotify(XEvent *e)
 	} else if (!c || c == selmon->sel)
 		return;
 	focus(c);
+}
+
+void
+enqueue(Client *c)
+{
+  Client *l;
+  for (l = c->mon->clients; l && l->next; l = l->next);
+  if (l) {
+     l->next = c;
+     c->next = NULL;
+  }
+}
+
+void
+enqueuestack(Client *c)
+{
+  Client *l;
+  for (l = c->mon->stack; l && l->snext; l = l->snext);
+  if (l) {
+     l->snext = c;
+     c->snext = NULL;
+  }
 }
 
 void
@@ -1846,6 +1877,45 @@ restack(Monitor *m)
 	}
 	XSync(dpy, False);
 	while (XCheckMaskEvent(dpy, EnterWindowMask, &ev));
+}
+
+void
+rotatestack(const Arg *arg)
+{
+  Client *c = NULL;
+
+  unsigned n = 0;
+  for (c = nexttiled(selmon->clients), n = 0; c; c = nexttiled(c->next), n ++)
+     if (c == selmon->sel)
+        break;
+
+  if (!selmon->sel)
+     return;
+  if (arg->i > 0) {
+     for (c = nexttiled(selmon->clients); c && nexttiled(c->next); c = nexttiled(c->next));
+     if (c){
+        detach(c);
+        attach(c);
+        detachstack(c);
+        attachstack(c);
+     }
+  } else {
+     if ((c = nexttiled(selmon->clients))){
+        detach(c);
+        enqueue(c);
+        detachstack(c);
+        enqueuestack(c);
+     }
+  }
+  if (c){
+     arrange(selmon);
+     //unfocus(f, 1);
+     //focus(f);
+     unsigned i;
+     for (i = 0, c = nexttiled(selmon->clients); c && i != n; c = nexttiled(c->next), i ++);
+     if (c) focus(c);
+     restack(selmon);
+  }
 }
 
 void
