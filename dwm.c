@@ -2908,9 +2908,14 @@ view(const Arg *arg)
 void
 prevwin(const Arg *arg)
 {
-   if (selmon->pertag->prevwin != NULL)
-   {
+   if (selmon->pertag->prevwin != NULL && ISVISIBLE(selmon->pertag->prevwin)) {
       focus(selmon->pertag->prevwin);
+      arrange(selmon);
+   } else {
+      Client *c = selmon->sel;
+      if (c) c = nexttiled(c->next);
+      if (!c) c = selmon->clients;
+      focus(c);
       arrange(selmon);
    }
 }

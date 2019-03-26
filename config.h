@@ -111,7 +111,7 @@ static Key keys[] = {
 	{ MODKEY,                       XK_h,      setmfact,       "layout-factor-decr", {.f = -0.05} },
 	{ MODKEY,                       XK_l,      setmfact,       "layout-factor-incr", {.f = +0.05} },
 	{ MODKEY|ShiftMask,             XK_Return, zoom,           "zoom", {0} },
-	{ MODKEY,                       XK_Tab,    view,           "layout-toggle", {0} },
+	{ MODKEY,                       XK_Tab,    view,           "tag-prev", {0} },
 	{ MODKEY|ShiftMask,             XK_c,      killclient,     "client-kill", {0} },
 	{ MODKEY,                       XK_t,      setlayout,      "layout-tile", {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      "layout-monocle", {.v = &layouts[1]} },
