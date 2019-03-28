@@ -656,8 +656,8 @@ void
 climit(const Arg *arg)
 {
    if (arg->i == 0)
-      cpt = 0;
-   else if (arg->i + (int) cpt > 0)
+      cpt = UINT_MAX;
+   else if (arg->i + (int) cpt >= 0)
       cpt += arg->i;
    arrange(selmon);
 }
@@ -2309,10 +2309,16 @@ tile(Monitor *m)
 	if (n == 0)
 		return;
 
-   if (cpt > 0 && n > cpt + m->nmaster) {
-      snprintf(m->ltsymbol, sizeof m->ltsymbol, "%u/%u/%u", m->nmaster, cpt, n);
-      n = cpt + m->nmaster;
+   if (cpt == 0) {
+      monocle(m);
+      snprintf(m->ltsymbol, sizeof m->ltsymbol, "%u/%u/%u", m->nmaster, MIN(n - m->nmaster, cpt), MAX((int)(n - m->nmaster - cpt), 0));
+      return;
    }
+
+   snprintf(m->ltsymbol, sizeof m->ltsymbol, "%u/%u/%u", m->nmaster, MIN(n - m->nmaster, cpt), (cpt != UINT_MAX ? MAX((int)(n - m->nmaster - cpt), 0) : 0));
+
+   if (cpt != UINT_MAX && n > cpt + m->nmaster)
+      n = cpt + m->nmaster;
 
 	if (n > m->nmaster)
 		mw = m->nmaster ? m->ww * m->mfact : 0;
