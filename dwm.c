@@ -1962,7 +1962,7 @@ void
 runcmd(const Arg *arg)
 {
    char *selection = NULL;
-   InOutPipeT pipe = dmenu_qry("run command>", 0);
+   InOutPipeT pipe = dmenu_qry("dwm command>", 0);
    if (pipe.out == 0) goto cleanup;
 
    unsigned i;
