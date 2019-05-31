@@ -181,6 +181,7 @@ static void cleanup(void);
 static void cleanupmon(Monitor *mon);
 static void clientmessage(XEvent *e);
 static void climit(const Arg *arg);
+static void cliuntag(const Arg *arg);
 static void configure(Client *c);
 static void configurenotify(XEvent *e);
 static void configurerequest(XEvent *e);
@@ -660,6 +661,20 @@ climit(const Arg *arg)
    else if (arg->i + (int) cpt >= 0)
       cpt += arg->i;
    arrange(selmon);
+}
+
+
+void
+cliuntag(const Arg *arg)
+{
+   Client *c = selmon->sel;
+
+   if ((c->tags & ~selmon->tagset[selmon->seltags]) != 0)
+   {
+      c->tags &= ~selmon->tagset[selmon->seltags];
+      focus(NULL);
+      arrange(selmon);
+   }
 }
 
 void
