@@ -669,12 +669,9 @@ cliuntag(const Arg *arg)
 {
    Client *c = selmon->sel;
 
-   if ((c->tags & ~selmon->tagset[selmon->seltags]) != 0)
-   {
-      c->tags &= ~selmon->tagset[selmon->seltags];
-      focus(NULL);
-      arrange(selmon);
-   }
+   c->tags &= ~selmon->tagset[selmon->seltags];
+   focus(NULL);
+   arrange(selmon);
 }
 
 void
@@ -1685,7 +1682,7 @@ void pullwin(const Arg *arg)
          unsigned tagi;
          for (tagi = 0; tagi < LENGTH(tags); tagi ++) {
             if (c->tags & (1<<tagi)) {
-               snprintf(buf, 256, "%u", tagi + 1);
+               snprintf(buf, 10, "%u", tagi + 1);
                write(pipe.out, buf, strlen(buf));
             }
          }
