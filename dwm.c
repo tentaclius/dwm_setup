@@ -1668,13 +1668,11 @@ void pullwin(const Arg *arg)
 
    /* Run dmenu and pass the list of client names that do not belong to the current tag */
    InOutPipeT pipe = dmenu_qry("pull window>", 10);
-   for (c = selmon->clients, i = 0;
-        c && i < 256;
-        c = c->next, i ++)
+   for (c = selmon->clients; c && ccount< 256; c = c->next)
    {
       if (!(c->tags & selmon->tagset[selmon->seltags]))
       {
-         snprintf(buf, 10, "%u. ", i);
+         snprintf(buf, 10, "%u. ", ccount);
          write(pipe.out, buf, strlen(buf));
          write(pipe.out, c->name, strlen(c->name));
          write(pipe.out, " [", 2);
@@ -1688,17 +1686,19 @@ void pullwin(const Arg *arg)
          }
 
          write(pipe.out, "] \n", 3);
-         c_index[i] = c;
+         c_index[ccount] = c;
+         ccount ++;
       }
    }
-   ccount = i;
    close(pipe.out);
 
    /* Get the user input */
    selection = dmenu_rsp(pipe);
    if (!selection || *selection == '\0') goto cleanup;
-   i = (unsigned) atoi(selection);
-   if (i >= ccount) goto cleanup;
+
+   char *endp = NULL;
+   i = (unsigned) strtol(selection, &endp, 10);
+   if (i >= ccount || endp == selection) goto cleanup;
 
    /* Pull the window to the current tag */
    c = c_index[i];
