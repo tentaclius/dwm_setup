@@ -241,6 +241,7 @@ static void restack(Monitor *m);
 static void rotatestack(const Arg *arg);
 static void run(void);
 static void run_app(const Arg *arg);
+static void run_favorite_app(const Arg *arg);
 static void runcmd(const Arg *arg);
 static void scan(void);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
@@ -1962,7 +1963,36 @@ void run_app(const Arg *arg)
    // Execute the entry
    if (fork() == 0)
    {
-      execlp("gtk-launch", "gtk-launch", p, NULL);
+      execlp("gtk4-launch", "gtk4-launch", p, NULL);
+      exit(1);
+   }
+
+cleanup:
+   if (pp) fclose(pp);
+}
+
+void run_favorite_app(const Arg *arg)
+{
+   // Run dmenu to get the user's input
+   FILE *pp = popen("dmenu -i -l 10 -p 'applications>' < " APP_FAVORITES, "r");
+   if (!pp) goto cleanup;
+
+   char buf[1024 + 1];
+   buf[1024] = '\0';
+
+   fgets(buf, 1024, pp);
+   if (buf[0] == '\0') goto cleanup;
+
+   // Find the last entry (the .desktop file name)
+   char *p = rindex(buf, APP_CACHE_SEPARATOR);
+   if (!p) goto cleanup;
+   p ++;
+   p = str_trim(p);
+
+   // Execute the entry
+   if (fork() == 0)
+   {
+      execlp("gtk4-launch", "gtk4-launch", p, NULL);
       exit(1);
    }
 

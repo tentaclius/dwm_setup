@@ -3,6 +3,7 @@
 #define APP_CACHE "~/.cache/applications.cache"
 #define APP_CACHE_SEPARATOR '/'
 #define MAX_TAGLEN 16
+#define APP_FAVORITES "~/.favorites.app"
 
 /* appearance */
 static const unsigned int borderpx  = 1;        /* border pixel of windows */
@@ -72,7 +73,8 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-p", "shell command>", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-static const char *termcmd[]  = { "st", "-e", "tmux", NULL };
+//static const char *termcmd[]  = { "st", "-e", "tmux", NULL };
+static const char *termcmd[] = { "gnome-terminal", NULL };
 //static const char *termcmd[]  = { "st", NULL };
 static const char *lockscreencmd[] = { "gnome-screensaver-command", "-l", NULL };
 static const char *volumeincr[] = { "volume_up", NULL };
@@ -98,6 +100,7 @@ static Key keys[] = {
    { MODKEY|Mod1Mask,              XK_l,      climit,         "layout-stack-decr", {.i = -1 } },
    { MODKEY|Mod1Mask,              XK_slash,  climit,         "layout-stack-inf", {.i = 0 } },
    { MODKEY,                       XK_p,      run_app,        "run-app", {0} },
+   { MODKEY|ShiftMask,             XK_p,      run_favorite_app, "run-favorite-app", {0} },
    { MODKEY,                       XK_x,      runcmd,         "", {0} },
    { MODKEY|ShiftMask,             XK_j,      rotatestack,    "rot-down", {.i = 1} },
    { MODKEY|ShiftMask,             XK_k,      rotatestack,    "rot-up", {.i = -1} },
