@@ -1,4 +1,5 @@
 /* See LICENSE file for copyright and license details. */
+#include <xkbcommon/xkbcommon-keysyms.h>
 
 #define APP_CACHE "~/.cache/applications.cache"
 #define APP_CACHE_SEPARATOR '/'
@@ -77,8 +78,13 @@ static const char *dmenucmd[] = { "dmenu_run", "-p", "shell command>", "-m", dme
 static const char *termcmd[] = { "gnome-terminal", NULL };
 //static const char *termcmd[]  = { "st", NULL };
 static const char *lockscreencmd[] = { "gnome-screensaver-command", "-l", NULL };
-static const char *volumeincr[] = { "volume_up", NULL };
-static const char *volumedecr[] = { "volume_down", NULL };
+
+// Media key commands
+static const char *volumeincr[] = { "amixer", "set", "Master", "10%+", NULL };
+static const char *volumedecr[] = { "amixer", "set", "Master", "10%-", NULL };
+static const char *volumemute[] = { "amixer", "set", "Master", "toggle", NULL };
+static const char *brightness_up[] = { "brightnessctl", "-d", "intel_backlight", "set", "--", "+10%", NULL };
+static const char *brightness_down[] = { "brightnessctl", "-d", "intel_backlight", "set", "--", "-10%", NULL };
 
 
 static Key keys[] = {
@@ -93,8 +99,6 @@ static Key keys[] = {
    { MODKEY|ShiftMask,             XK_period, tonexttag,      "win-to-next-tag", {.i = +1 } },
    { MODKEY|ShiftMask,             XK_comma,  tonexttag,      "win-to-prev-tag", {.i = -1 } },
    { MODKEY,                       XK_n,      nametag,        "tag-rename", {0} },
-   { MODKEY,                       XK_minus,  spawn,          "volume-decr", {.v = volumedecr } },
-   { MODKEY,                       XK_equal,  spawn,          "volume-incr", {.v = volumeincr } },
    { Mod1Mask,                     XK_Tab,    prevwin,        "win-focus-prev", {0} },
    { MODKEY|Mod1Mask,              XK_h,      climit,         "layout-stack-incr", {.i = +1 } },
    { MODKEY|Mod1Mask,              XK_l,      climit,         "layout-stack-decr", {.i = -1 } },
@@ -141,6 +145,13 @@ static Key keys[] = {
 	TAGKEYS(                        XK_8,                      "8", 7)
 	TAGKEYS(                        XK_9,                      "9", 8)
 	{ MODKEY|ShiftMask,             XK_q,      quit,           "quit", {0} },
+
+   // Media keys
+   { 0, XKB_KEY_XF86MonBrightnessUp, spawn, "brightness-up", {.v = brightness_up}},
+   { 0, XKB_KEY_XF86MonBrightnessDown, spawn, "brightness-down", {.v = brightness_down}},
+   { 0, XKB_KEY_XF86AudioLowerVolume,  spawn, "volume-decr", {.v = volumedecr }},
+   { 0, XKB_KEY_XF86AudioRaiseVolume,  spawn, "volume-incr", {.v = volumeincr }},
+   { 0, XKB_KEY_XF86AudioMute, spawn, "volume-mute", {.v = volumemute }},
 };
 
 /* button definitions */
