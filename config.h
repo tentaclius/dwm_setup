@@ -7,7 +7,7 @@
 #define APP_FAVORITES "~/.favorites.app"
 
 /* appearance */
-static const unsigned int borderpx  = 1;        /* border pixel of windows */
+static const unsigned int borderpx  = 2;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayspacing = 2;   /* systray spacing */
@@ -25,7 +25,8 @@ static const char col_cyan[]        = "#005577";
 static const char *colors[][3]      = {
 	/*               fg         bg         border   */
 	[SchemeNorm] = { col_gray3, col_gray1, col_gray2 },
-	[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
+	//[SchemeSel]  = { col_gray4, col_cyan,  col_cyan  },
+	[SchemeSel]  = { col_gray4, col_cyan,  "#FF0000"},
 };
 
 /* tagging */
@@ -57,6 +58,7 @@ static const Layout layouts[] = {
 	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
    { "HHH",      grid },
+   { "TTT",      bstack },
 };
 
 /* key definitions */
@@ -74,9 +76,8 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-p", "shell command>", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-//static const char *termcmd[]  = { "st", "-e", "tmux", NULL };
+//static const char *termcmd[] = { "alacritty", NULL };
 static const char *termcmd[] = { "gnome-terminal", NULL };
-//static const char *termcmd[]  = { "st", NULL };
 static const char *lockscreencmd[] = { "gnome-screensaver-command", "-l", NULL };
 
 // Media key commands
@@ -122,12 +123,15 @@ static Key keys[] = {
 	{ MODKEY|ShiftMask,             XK_Return, zoom,           "zoom", {0} },
 	{ MODKEY,                       XK_Tab,    view,           "tag-prev", {0} },
 	{ MODKEY|ShiftMask,             XK_c,      killclient,     "client-kill", {0} },
+
 	{ MODKEY,                       XK_t,      setlayout,      "layout-tile", {.v = &layouts[0]} },
 	{ MODKEY,                       XK_f,      setlayout,      "layout-monocle", {.v = &layouts[1]} },
 	{ MODKEY,                       XK_m,      setlayout,      "layout-floating", {.v = &layouts[2]} },
    { MODKEY,                       XK_g,      setlayout,      "layout-grid", {.v = &layouts[3]} },
+   { MODKEY,                       XK_u,      setlayout,      "layout-bstack", {.v = &layouts[4]} },
 	{ MODKEY,                       XK_space,  setlayout,      "layout-toggle", {0} },
 	{ MODKEY|ShiftMask,             XK_space,  togglefloating, "win-float-toggle", {0} },
+
 	{ MODKEY,                       XK_0,      view,           "tag-view 0", {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            "win-tag-set 0", {.ui = ~0 } },
    { MODKEY|Mod1Mask,              XK_0,      focusnth,       "focus-nth 9", {.ui = 9 } },
