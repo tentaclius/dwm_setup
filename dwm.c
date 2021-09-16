@@ -244,6 +244,7 @@ static void run(void);
 static void run_app(const Arg *arg);
 static void run_favorite_app(const Arg *arg);
 static void runcmd(const Arg *arg);
+static void chooselayout(const Arg *arg);
 static void scan(void);
 static int sendevent(Window w, Atom proto, int m, long d0, long d1, long d2, long d3, long d4);
 static void sendmon(Client *c, Monitor *m);
@@ -2056,6 +2057,38 @@ runcmd(const Arg *arg)
 
    for (i = 0; i < LENGTH(keys); i ++) {
       if (strcmp(selection, keys[i].cmdname) == 0) {
+         keys[i].func(&keys[i].arg);
+         goto cleanup;
+      }
+   }
+
+cleanup:
+   free_not_null(selection);
+}
+
+void
+chooselayout(const Arg *arg)
+{
+   char *selection = NULL;
+   InOutPipeT pipe = dmenu_qry("layout>", 6);
+   if (pipe.out == 0) goto cleanup;
+
+   unsigned i;
+   for (i = 0; i < LENGTH(keys); i ++)
+   {
+      if (keys[i].cmdname[0] != '\0' && strncmp(keys[i].cmdname, "set-layout ", 11) == 0) {
+         write(pipe.out, &keys[i].cmdname[11], strlen(keys[i].cmdname));
+         write(pipe.out, "\n", 1);
+      }
+   }
+   close(pipe.out);
+
+   /* Get the user input */
+   selection = dmenu_rsp(pipe);
+   if (!selection || *selection == '\0') goto cleanup;
+
+   for (i = 0; i < LENGTH(keys); i ++) {
+      if (strncmp(keys[i].cmdname, "set-layout ", 11) == 0 && strcmp(selection, &keys[i].cmdname[11]) == 0) {
          keys[i].func(&keys[i].arg);
          goto cleanup;
       }
