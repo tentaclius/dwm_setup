@@ -1,3 +1,6 @@
+#ifndef _UTIL_H_
+#define _UTIL_H_
+
 /* See LICENSE file for copyright and license details. */
 
 #define MAX(A, B)               ((A) > (B) ? (A) : (B))
@@ -17,3 +20,5 @@ typedef struct {
 
 InOutPipeT dmenu_qry(const char *prompt, unsigned lines);
 char* dmenu_rsp(InOutPipeT fd);
+
+#endif

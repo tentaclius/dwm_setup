@@ -76,15 +76,17 @@ InOutPipeT dmenu_qry(const char *prompt, unsigned lines)
       if (dup2(p_out[1], STDOUT_FILENO) == -1) goto cleanup;
 
       if (lines == 0)
-         execlp("dmenu", "dmenu", "-i", "-p", prompt, NULL);
+         /*execlp("dmenu", "dmenu", "-i", "-p", prompt, NULL);*/
+         execlp("rofi", "rofi", "-dmenu", "-i", "-p", prompt, NULL);
       else
       {
-         char str[10 + 1];
-         str[10] = '\0';
+         char str[12 + 1];
+         str[12] = '\0';
 
-         snprintf(str, 10, "%u", lines);
+         snprintf(str, 11, "%u", lines);
 
-         execlp("dmenu", "dmenu", "-i", "-p", prompt, "-l", str, NULL);
+         /*execlp("dmenu", "dmenu", "-i", "-p", prompt, "-l", str, NULL);*/
+         execlp("rofi", "rofi", "-dmenu", "-i", "-p", prompt, "-l", str, NULL);
       }
       exit(1);
    }

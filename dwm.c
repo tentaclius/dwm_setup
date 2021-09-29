@@ -241,8 +241,6 @@ static void resizerequest(XEvent *e);
 static void restack(Monitor *m);
 static void rotatestack(const Arg *arg);
 static void run(void);
-static void run_app(const Arg *arg);
-static void run_favorite_app(const Arg *arg);
 static void runcmd(const Arg *arg);
 static void chooselayout(const Arg *arg);
 static void scan(void);
@@ -330,6 +328,9 @@ static Drw *drw;
 static Monitor *mons, *selmon;
 static Window root, wmcheckwin;
 static int restart = 0;
+
+/*=== s_layout ===*/
+#include "s_layout.c"
 
 /* configuration, allows nested code to access above variables */
 #include "config.h"
@@ -1707,7 +1708,7 @@ void pullwin(const Arg *arg)
    {
       if (!(c->tags & selmon->tagset[selmon->seltags]))
       {
-         snprintf(buf, 10, "%u. ", ccount);
+         snprintf(buf, 10, "%lu. ", ccount);
          write(pipe.out, buf, strlen(buf));
          write(pipe.out, c->name, strlen(c->name));
          write(pipe.out, " [", 2);
@@ -1804,6 +1805,9 @@ removesystrayicon(Client *i)
 void
 resize(Client *c, int x, int y, int w, int h, int interact)
 {
+   printf("resize: (%p) %d %d %d %d\n",
+         (void*) c, x, y, w, h);
+
 	if (applysizehints(c, &x, &y, &w, &h, interact))
 		resizeclient(c, x, y, w, h);
 }
@@ -1974,64 +1978,6 @@ run(void)
 	while (running && !XNextEvent(dpy, &ev))
 		if (handler[ev.type])
 			handler[ev.type](&ev); /* call handler */
-}
-
-void run_app(const Arg *arg)
-{
-   // Run dmenu to get the user's input
-   FILE *pp = popen("dmenu -i -l 10 -p 'applications>' < " APP_CACHE, "r");
-   if (!pp) goto cleanup;
-
-   char buf[1024 + 1];
-   buf[1024] = '\0';
-
-   fgets(buf, 1024, pp);
-   if (buf[0] == '\0') goto cleanup;
-
-   // Find the last entry (the .desktop file name)
-   char *p = rindex(buf, APP_CACHE_SEPARATOR);
-   if (!p) goto cleanup;
-   p ++;
-   p = str_trim(p);
-
-   // Execute the entry
-   if (fork() == 0)
-   {
-      execlp("gtk4-launch", "gtk4-launch", p, NULL);
-      exit(1);
-   }
-
-cleanup:
-   if (pp) fclose(pp);
-}
-
-void run_favorite_app(const Arg *arg)
-{
-   // Run dmenu to get the user's input
-   FILE *pp = popen("dmenu -i -l 10 -p 'applications>' < " APP_FAVORITES, "r");
-   if (!pp) goto cleanup;
-
-   char buf[1024 + 1];
-   buf[1024] = '\0';
-
-   fgets(buf, 1024, pp);
-   if (buf[0] == '\0') goto cleanup;
-
-   // Find the last entry (the .desktop file name)
-   char *p = rindex(buf, APP_CACHE_SEPARATOR);
-   if (!p) goto cleanup;
-   p ++;
-   p = str_trim(p);
-
-   // Execute the entry
-   if (fork() == 0)
-   {
-      execlp("gtk4-launch", "gtk4-launch", p, NULL);
-      exit(1);
-   }
-
-cleanup:
-   if (pp) fclose(pp);
 }
 
 void
@@ -2440,10 +2386,12 @@ tile(Monitor *m)
    {
 		if (i < m->nmaster) {
 			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
+         printf("wx:%d, wy:%d, wh:%d, ww:%d;  my:%d, mw:%d, h:%d\n", m->wx, m->wy, m->wh, m->ww, my, mw, h);
 			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
 			my += HEIGHT(c);
       } else if (cpt > 0 && i >= n) {
          h = m->wh / cpt;
+         printf("wx:%d, wy:%d, wh:%d, ww:%d;  my:%d, mw:%d, h:%d\n", m->wx, m->wy, m->wh, m->ww, my, mw, h);
          resize(c, 
                m->wx + mw,
                m->wy + m->wh - h,
@@ -2451,6 +2399,7 @@ tile(Monitor *m)
                h - (2*c->bw), 0);
 		} else {
 			h = (m->wh - ty) / (n - i);
+         printf("wx:%d, wy:%d, wh:%d, ww:%d;  my:%d, mw:%d, h:%d\n", m->wx, m->wy, m->wh, m->ww, my, mw, h);
 			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
 			ty += HEIGHT(c);
 		}

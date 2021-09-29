@@ -4,7 +4,6 @@
 #define APP_CACHE "~/.cache/applications.cache"
 #define APP_CACHE_SEPARATOR '/'
 #define MAX_TAGLEN 16
-#define APP_FAVORITES "~/.favorites.app"
 
 /* appearance */
 static const unsigned int borderpx  = 2;        /* border pixel of windows */
@@ -32,7 +31,7 @@ static const char *colors[][3]      = {
 /* tagging */
 static char tags[][MAX_TAGLEN] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 
-static unsigned cpt = 2; /* clients per tag (in stack area) */
+static unsigned cpt = 3; /* clients per tag (in stack area) */
 
 static const Rule rules[0];
 #if 0
@@ -55,10 +54,11 @@ static const int resizehints = 1;    /* 1 means respect size hints in tiled resi
 static const Layout layouts[] = {
 	/* symbol     arrange function */
 	{ "[]=",      tile },    /* first entry is default */
-	{ "><>",      NULL },    /* no layout function means floating behavior */
 	{ "[M]",      monocle },
+	{ "><>",      NULL },    /* no layout function means floating behavior */
    { "HHH",      grid },
    { "TTT",      bstack },
+   { "SXP",      s_layout },
 };
 
 /* key definitions */
@@ -79,10 +79,11 @@ static const char *dmenucmd[] = { "dmenu_run", "-p", "shell command>", "-m", dme
 //static const char *termcmd[] = { "alacritty", NULL };
 static const char *termcmd[] = { "gnome-terminal", NULL };
 static const char *lockscreencmd[] = { "gnome-screensaver-command", "-l", NULL };
+static const char *runapp[] = { "rofi", "rofi", "-show-icons", "-theme", "~/.config/rofi/themes/rhombuses.rasi", "-show", "drun", NULL };
 
 // Media key commands
-static const char *volumeincr[] = { "amixer", "set", "Master", "10%+", NULL };
-static const char *volumedecr[] = { "amixer", "set", "Master", "10%-", NULL };
+static const char *volumeincr[] = { "amixer", "set", "Master", "5%+", NULL };
+static const char *volumedecr[] = { "amixer", "set", "Master", "5%-", NULL };
 static const char *volumemute[] = { "amixer", "set", "Master", "toggle", NULL };
 static const char *brightness_up[] = { "brightnessctl", "-d", "intel_backlight", "set", "--", "+10%", NULL };
 static const char *brightness_down[] = { "brightnessctl", "-d", "intel_backlight", "set", "--", "-10%", NULL };
@@ -104,8 +105,7 @@ static Key keys[] = {
    { MODKEY|Mod1Mask,              XK_h,      climit,         "layout-stack-incr", {.i = +1 } },
    { MODKEY|Mod1Mask,              XK_l,      climit,         "layout-stack-decr", {.i = -1 } },
    { MODKEY|Mod1Mask,              XK_slash,  climit,         "layout-stack-inf", {.i = 0 } },
-   { MODKEY,                       XK_p,      run_app,        "run-app", {0} },
-   { MODKEY|ShiftMask,             XK_p,      run_favorite_app, "run-favorite-app", {0} },
+   { MODKEY,                       XK_p,      spawn,          "run-app", {.v = runapp} },
    { MODKEY,                       XK_x,      runcmd,         "", {0} },
    { MODKEY|ShiftMask,             XK_j,      rotatestack,    "rot-down", {.i = 1} },
    { MODKEY|ShiftMask,             XK_k,      rotatestack,    "rot-up", {.i = -1} },
@@ -129,10 +129,12 @@ static Key keys[] = {
    { MODKEY,                       XK_equal,  chooselayout,   "layout-choose", {0} },
 
 	{ MODKEY,                       XK_t,      setlayout,      "set-layout tile", {.v = &layouts[0]} },
-	{ MODKEY,                       XK_m,      setlayout,      "set-layout floating", {.v = &layouts[1]} },
-	{ MODKEY,                       XK_f,      setlayout,      "set-layout monocle", {.v = &layouts[2]} },
+	{ MODKEY,                       XK_m,      setlayout,      "set-layout monocle", {.v = &layouts[1]} },
+	{ MODKEY,                       XK_f,      setlayout,      "set-layout floating", {.v = &layouts[2]} },
    { MODKEY,                       XK_g,      setlayout,      "set-layout grid", {.v = &layouts[3]} },
    { MODKEY,                       XK_u,      setlayout,      "set-layout bstack", {.v = &layouts[4]} },
+   { MODKEY,                       XK_s,      setlayout,      "set-layout sexp", {.v = &layouts[5]}},
+   { MODKEY|ShiftMask,             XK_s,      set_s_layout,   "config-layout sexp", {.v = &layouts[5]}},
 
 	{ MODKEY,                       XK_0,      view,           "tag-view 0", {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            "win-tag-set 0", {.ui = ~0 } },
