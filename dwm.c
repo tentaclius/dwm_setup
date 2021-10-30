@@ -2365,12 +2365,12 @@ tile(Monitor *m)
 
    if (cpt == 0) {
       monocle(m);
-      snprintf(m->ltsymbol, sizeof m->ltsymbol, "%u/%u/%u",
+      snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%u/%u/%u]",
             m->nmaster, MIN(n - m->nmaster, cpt), MAX((int)(n - m->nmaster - cpt), 0));
       return;
    }
 
-   snprintf(m->ltsymbol, sizeof m->ltsymbol, "%u/%u/%u",
+   snprintf(m->ltsymbol, sizeof m->ltsymbol, "[%u/%u/%u]",
          MIN(m->nmaster, n), (n > m->nmaster ? MIN(n - m->nmaster, cpt) : 0),
          (cpt != UINT_MAX ? MAX((int)(n - m->nmaster - cpt), 0) : 0));
 

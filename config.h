@@ -6,7 +6,7 @@
 #define MAX_TAGLEN 16
 
 /* appearance */
-static const unsigned int borderpx  = 2;        /* border pixel of windows */
+static const unsigned int borderpx  = 5;        /* border pixel of windows */
 static const unsigned int snap      = 32;       /* snap pixel */
 static const unsigned int systraypinning = 0;   /* 0: sloppy systray follows selected monitor, >0: pin systray to monitor X */
 static const unsigned int systrayspacing = 2;   /* systray spacing */
@@ -29,13 +29,11 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-static char tags[][MAX_TAGLEN] = { "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+static char tags[][MAX_TAGLEN] = { "1", "2", "3", "4", }; //"5", "6", "7", "8", "9" };
 
 static unsigned cpt = 3; /* clients per tag (in stack area) */
 
-static const Rule rules[0];
-#if 0
-= {
+static const Rule rules[] = {
 	/* xprop(1):
 	 *	WM_CLASS(STRING) = instance, class
 	 *	WM_NAME(STRING) = title
@@ -43,8 +41,9 @@ static const Rule rules[0];
 	/* class      instance    title       tags mask     isfloating   monitor */
 	//{ "Gimp",     NULL,       NULL,       0,            1,           -1 },
 	//{ "Firefox",  NULL,       NULL,       1 << 8,       0,           -1 },
+   { "QjackCtl", "qjackctl", "JACK Audio Connection Kit", 0, 1, -1 },
+   { "Gnome-screenshot", "gnome-screenshot", "Screenshot", 0, 1, -1},
 };
-#endif
 
 /* layout(s) */
 static const float mfact     = 0.55; /* factor of master area size [0.05..0.95] */
@@ -76,10 +75,10 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-p", "shell command>", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
-//static const char *termcmd[] = { "alacritty", NULL };
-static const char *termcmd[] = { "gnome-terminal", NULL };
+//static const char *termcmd[] = { "st", NULL };
+static const char *termcmd[] = { "term", NULL };
 static const char *lockscreencmd[] = { "gnome-screensaver-command", "-l", NULL };
-static const char *runapp[] = { "rofi", "rofi", "-show-icons", "-theme", "~/.config/rofi/themes/rhombuses.rasi", "-show", "drun", NULL };
+static const char *runapp[] = { "run", "rofi", "rofi", "-show-icons", "-theme", "~/.config/rofi/themes/rhombuses.rasi", "-show", "drun", NULL };
 
 // Media key commands
 static const char *volumeincr[] = { "amixer", "set", "Master", "5%+", NULL };
@@ -87,6 +86,7 @@ static const char *volumedecr[] = { "amixer", "set", "Master", "5%-", NULL };
 static const char *volumemute[] = { "amixer", "set", "Master", "toggle", NULL };
 static const char *brightness_up[] = { "brightnessctl", "-d", "intel_backlight", "set", "--", "+10%", NULL };
 static const char *brightness_down[] = { "brightnessctl", "-d", "intel_backlight", "set", "--", "-10%", NULL };
+static const char *screenshot[] = { "gtk4-launch", "org.gnome.Screenshot.desktop", NULL };
 
 
 static Key keys[] = {
@@ -160,6 +160,7 @@ static Key keys[] = {
    { 0, XKB_KEY_XF86AudioLowerVolume,  spawn, "volume-decr", {.v = volumedecr }},
    { 0, XKB_KEY_XF86AudioRaiseVolume,  spawn, "volume-incr", {.v = volumeincr }},
    { 0, XKB_KEY_XF86AudioMute, spawn, "volume-mute", {.v = volumemute }},
+   { MODKEY, XKB_KEY_Print, spawn, "screenshot", {.v = screenshot }},
 };
 
 /* button definitions */

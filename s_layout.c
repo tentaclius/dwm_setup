@@ -51,12 +51,15 @@ enum node_type_t
    ND_HORIZONTAL_RL,
    ND_VERTICAL_UD,
    ND_VERTICAL_DU,
+   ND_VOID,
 
    // Elements
    ND_CLIENT,
    ND_CLIENT_NUM,
    ND_CLIENT_NTH,
+   ND_CLIENT_CLASS,
    ND_CLIENT_FLOAT,
+   ND_CLIENT_EMPTY,
    ND_REST,
 };
 
@@ -68,7 +71,10 @@ struct node_t
    int x, y, w, h;
    int f;
    unsigned n;
+   unsigned margin;
+   char *s;
    Client *c;
+
    struct node_t *branch;
    struct node_t *next;
 };
@@ -102,6 +108,8 @@ node_t* clone_node(node_t *n)
    node->h = n->h;
    node->f = n->f;
    node->n = n->n;
+   node->margin = n->margin;
+   node->s = n->s;
    node->c = n->c;
    node->next = NULL;
    node->branch = NULL;
@@ -117,6 +125,15 @@ int is_nested(node_t *node)
        || node->type == ND_MONOCLE;
 }
 
+int is_terminal(char c)
+{
+   return c == ' '
+       || c == '\t'
+       || c == '('
+       || c == ')'
+       || c == '\0';
+}
+
 void free_node(node_t *node)
 {
    for ( node_t *n = node;
@@ -127,6 +144,7 @@ void free_node(node_t *node)
 
       node_t *ns = n->next;
 
+      if (n->s) free(n->s);
       free(n);
       n = ns;
    }
@@ -215,6 +233,15 @@ s_recur_analyze(struct client_ref_t **clients, node_t *node)
       return ret;
    }
 
+   // An empty slot.
+   if (node->type == ND_CLIENT_EMPTY) {
+      struct s_recur_analyze_ret ret;
+      ret.tail = ret.head = clone_node(node);
+      ret.tail->c = NULL;
+      ret.tail->type = ND_CLIENT;
+      return ret;
+   }
+
    // Pick n'th client from the list top.
    if (node->type == ND_CLIENT_NTH) {
       struct client_ref_t *prev = NULL;
@@ -223,7 +250,7 @@ s_recur_analyze(struct client_ref_t **clients, node_t *node)
 
       for ( i = 0, c = *clients;
             i < node->n && c != NULL;
-            i ++, c = c->next) 
+            i ++, c = c->next )
       {
          prev = c;
       }
@@ -237,6 +264,17 @@ s_recur_analyze(struct client_ref_t **clients, node_t *node)
          ret.tail = ret.head = clone_node(node);
          ret.head->type = ND_CLIENT;
          ret.head->c = c->c;
+      }
+
+      return ret;
+   }
+
+   if (node->type == ND_CLIENT_CLASS) {
+      struct client_ref_t *prev = NULL;
+      struct s_recur_analyze_ret ret;
+
+      for ( c = *clients; c != NULL; c = c->next) {
+         // TODO get class and compare to the pattern.
       }
 
       return ret;
@@ -344,10 +382,17 @@ void s_recur_resize(node_t *node, struct frame_t frame)
    if (node == NULL) return;
 
    if (node->type == ND_CLIENT) {
-      if (node->f)
-         resize(node->c, node->x, node->y, node->w, node->h, 0);
-      else
-         resize(node->c, frame.x, frame.y, frame.w, frame.h, 0);
+      if (node->c != NULL) {
+         if (node->f)
+            resize(node->c, node->x, node->y, node->w, node->h, 0);
+         else
+            resize(node->c,
+                  frame.x + node->margin,
+                  frame.y + node->margin,
+                  frame.w - 2 * node->margin - 2 * node->c->bw,
+                  frame.h - 2 * node->margin - 2 * node->c->bw,
+                  0);
+      }
       return;
    }
 
@@ -356,6 +401,11 @@ void s_recur_resize(node_t *node, struct frame_t frame)
       float wgt = 0.0;
       int delta = 0;
       float avg_wgt = 1;
+
+      frame.x += node->margin;
+      frame.y += node->margin;
+      frame.w -= 2 * node->margin;
+      frame.h -= 2 * node->margin;
       
       node_length(node->branch, &len, &wgt);
       if (len != 0) {
@@ -380,6 +430,11 @@ void s_recur_resize(node_t *node, struct frame_t frame)
       float wgt = 0.0;
       int delta = 0;
       float avg_wgt = 1;
+
+      frame.x += node->margin;
+      frame.y += node->margin;
+      frame.w -= 2 * node->margin;
+      frame.h -= 2 * node->margin;
       
       node_length(node->branch, &len, &wgt);
       if (len != 0) {
@@ -400,6 +455,11 @@ void s_recur_resize(node_t *node, struct frame_t frame)
    }
 
    if (node->type == ND_MONOCLE) {
+      frame.x += node->margin;
+      frame.y += node->margin;
+      frame.w -= 2 * node->margin;
+      frame.h -= 2 * node->margin;
+
       for (node_t *n = node->branch; n != NULL; n = n->next)
          s_recur_resize(n, frame);
    }
@@ -430,33 +490,40 @@ void s_layout(Monitor *m)
    free_node(ret.head);
 }
 
-enum s_char_type_t {
-   SC_SPACE,
-   SC_WORD,
-   SC_PAREN,
-   SC_EOF,
-};
-
-enum s_char_type_t
-char_type(char c)
-{
-   if (c == ' ' || c == '\t' || c == '\n')
-      return SC_SPACE;
-
-   if (c == '(' || c == ')')
-      return SC_PAREN;
-
-   if (c == '\0')
-      return SC_EOF;
-
-   return SC_WORD;
-}
-
 // Tokenize string
+typedef struct string_token_t string_token_t;
 struct string_token_t {
-   char token[8];
+   char token[32];
    struct string_token_t *next;
 };
+
+string_token_t* parse_string(char *str, unsigned *i)
+{
+   unsigned char escape = 0;
+   unsigned j = 0;
+   string_token_t *ret = (string_token_t*) malloc(sizeof(string_token_t));
+   ret->next = NULL;
+
+   while (str[*i] != '\0' && j < sizeof(ret->token) - 1) {
+      if (str[*i] == '\\' && !escape) {
+         escape = 1;
+         (*i) ++;
+         continue;
+      }
+
+      if (str[*i] == '"' && !escape) {
+         break;
+      }
+
+      ret->token[j++] = str[(*i)++];
+      escape = 0;
+   }
+   ret->token[j] = '\0';
+
+   if (str[*i] == '\0')
+      (*i) --;
+   return ret;
+}
 
 struct string_token_t* tokenize_string(char *str)
 {
@@ -465,22 +532,33 @@ struct string_token_t* tokenize_string(char *str)
    head.next = NULL;
    unsigned word_start = UINT_MAX;
    unsigned len = 0;
+   char *s = NULL;
 
    for (unsigned i = 0;; i ++) {
-      switch (char_type(str[i])) {
-         case SC_EOF:
+      switch (str[i]) {
+         // End of line
+         case '\0':
             if (word_start != UINT_MAX) {
                node->next = (struct string_token_t*) malloc(sizeof(struct string_token_t));
                node = node->next;
                node->next = NULL;
+
                len = MIN(i - word_start, sizeof(node->token) - 1);
                strncpy(node->token, &str[word_start], len);
                node->token[len] = '\0';
             }
             return head.next;
 
-         case SC_SPACE:
-         case SC_PAREN:
+         // Beginning of a string
+         case '"':
+            node->next = parse_string(str, &i);
+            if (node->next) node = node->next;
+
+         // Space or paren
+         case ' ':
+         case '\t':
+         case '(':
+         case ')':
             if (word_start != UINT_MAX) {
                node->next = (struct string_token_t*) malloc(sizeof(struct string_token_t));
                node = node->next;
@@ -490,7 +568,7 @@ struct string_token_t* tokenize_string(char *str)
                node->token[len] = '\0';
                word_start = UINT_MAX;
             }
-            if (char_type(str[i]) == SC_PAREN) {
+            if (str[i] == '(' || str[i] == ')') {
                node->next = (struct string_token_t*) malloc(sizeof(struct string_token_t));
                node = node->next;
                node->next = NULL;
@@ -499,6 +577,7 @@ struct string_token_t* tokenize_string(char *str)
             }
             break;
 
+         // A piece of a word
          default:
             if (word_start == UINT_MAX)
                word_start = i;
@@ -508,13 +587,13 @@ struct string_token_t* tokenize_string(char *str)
 }
 
 // Parse s-expression to node_t structure
-node_t* parse_sexp(struct string_token_t **token)
+node_t* parse_sexp(string_token_t **token)
 {
    node_t *head = NULL;
    node_t branch, *p = &branch;
    branch.next = NULL;
 
-   struct string_token_t *t = *token;
+   string_token_t *t = *token;
 
    while (t != NULL) {
       if (strcmp(t->token, ")") == 0) {
@@ -538,7 +617,7 @@ node_t* parse_sexp(struct string_token_t **token)
 
       // ==== Client slots
       // Single client
-      if (strcmp(t->token, "c") == 0) {
+      if (strcmp(t->token, "c") == 0 || strcmp(t->token, "client") == 0) {
          if (head == NULL) {
             head = alloc_node(ND_CLIENT);
          } else {
@@ -549,8 +628,20 @@ node_t* parse_sexp(struct string_token_t **token)
          continue;
       }
 
+      // Empty viewport
+      if (strcmp(t->token, "e") == 0 || strcmp(t->token, "empty") == 0) {
+         if (head == NULL) {
+            head = alloc_node(ND_CLIENT_EMPTY);
+         } else {
+            p->next = alloc_node(ND_CLIENT_EMPTY);
+            p = p->next;
+         }
+         t = t->next;
+         continue;
+      }
+
       // The rest of the clients
-      if (strcmp(t->token, "...") == 0) {
+      if (strcmp(t->token, "...") == 0 || strcmp(t->token, "rest") == 0) {
          if (head == NULL) {
             head = alloc_node(ND_REST);
          } else {
@@ -560,18 +651,41 @@ node_t* parse_sexp(struct string_token_t **token)
          t = t->next;
          continue;
       }
-      
-      // N'th client
-      if (strcmp(t->token, "nth") == 0) {
-         if (head == NULL) {
-            head = alloc_node(ND_CLIENT_NTH);
 
-            t = t->next;
-            if (t != NULL) {
-               head->n = (unsigned) atoi(t->token);
+      // Choose the client by class
+      if (strcmp(t->token, "class") == 0) {
+         if (head == NULL) {
+            head = alloc_node(ND_CLIENT_CLASS);
+            if (t->next) {
                t = t->next;
+               head->s = strdup(t->token);
+            }
+         } else {
+            p->next = alloc_node(ND_CLIENT_CLASS);
+            p = p->next;
+            if (t->next) {
+               t = t->next;
+               p->s = strdup(t->token);
             }
          }
+         t = t->next;
+         continue;
+      }
+      
+      // N'th client
+      unsigned long n = 0;
+      char *endp = NULL;
+      n = strtoul(t->token, &endp, 10);
+      if (is_terminal(*endp)) {
+         if (head == NULL) {
+            head = alloc_node(ND_CLIENT_NTH);
+            head->n = n;
+         } else {
+            p->next = alloc_node(ND_CLIENT_NTH);
+            p->next->n = n;
+            p = p->next;
+         }
+         t = t->next;
          continue;
       }
 
@@ -586,13 +700,14 @@ node_t* parse_sexp(struct string_token_t **token)
                t = t->next;
             }
          }
-
          continue;
       }
 
       // ==== Parameters
       // weight
-      if (strcmp(t->token, "w:") == 0 && head != NULL) {
+      if ((strcmp(t->token, "w:") == 0 || strcmp(t->token, ":w") == 0
+               || strcmp(t->token, "weight:") == 0
+               || strcmp(t->token, ":weight") == 0) && head != NULL) {
          t = t->next;
 
          if (t != NULL) {
@@ -602,8 +717,23 @@ node_t* parse_sexp(struct string_token_t **token)
          continue;
       }
 
+      // margin
+      if (((strcmp(t->token, "m:") == 0) || strcmp(t->token, ":m") == 0 
+               || strcmp(t->token, "margin:") == 0
+               || strcmp(t->token, ":margin")) && head != NULL) {
+         t = t->next;
+
+         if (t != NULL) {
+            head->margin = (unsigned) atoi(t->token);
+            t = t->next;
+         }
+         continue;
+      }
+
       // floating geometry
-      if (strcmp(t->token, "f:") == 0 && head != NULL) {
+      if ((strcmp(t->token, "f:") == 0 || strcmp(t->token, ":f") == 0
+               || strcmp(t->token, "float:") == 0
+               || strcmp(t->token, ":float")) && head != NULL) {
          head->f = 1;
          t = t->next;
 
@@ -627,19 +757,19 @@ node_t* parse_sexp(struct string_token_t **token)
       }
 
       // ==== Containers
-      if (strcmp(t->token, "h") == 0 && head == NULL)
+      if ((strcmp(t->token, "h") == 0 || strcmp(t->token, "horizontal") == 0) && head == NULL)
          head = alloc_node(ND_HORIZONTAL_LR);
 
-      if (strcmp(t->token, "hr") == 0 && head == NULL)
+      if ((strcmp(t->token, "hr") == 0 || strcmp(t->token, "h-reversed") == 0) && head == NULL)
          head = alloc_node(ND_HORIZONTAL_RL);
 
-      if (strcmp(t->token, "v") == 0 && head == NULL)
+      if ((strcmp(t->token, "v") == 0 || strcmp(t->token, "vertical") == 0) && head == NULL)
          head = alloc_node(ND_VERTICAL_UD);
 
-      if (strcmp(t->token, "vr") == 0 && head == NULL)
+      if ((strcmp(t->token, "vr") == 0 || strcmp(t->token, "v-reversed") == 0) && head == NULL)
          head = alloc_node(ND_VERTICAL_UD);
 
-      if (strcmp(t->token, "m") == 0 && head == NULL)
+      if ((strcmp(t->token, "m") == 0 || strcmp(t->token, "monocle") == 0) && head == NULL)
          head = alloc_node(ND_MONOCLE);
 
       t = t->next;
@@ -652,16 +782,27 @@ node_t* parse_sexp(struct string_token_t **token)
    return head;
 }
 
-#define SXP_HISTORY "/tmp/.dwm_sxp_history"
+#define SXP_HISTORY ".dwm_sxp_history"
 void set_s_layout(const Arg *arg)
 {
-   // make sure the history file exists
-   FILE *hf = fopen(SXP_HISTORY, "a");
-   fclose(hf);
-   system("sort " SXP_HISTORY " | uniq > " SXP_HISTORY "~");
-   system("mv " SXP_HISTORY "~ " SXP_HISTORY);
+   FILE *pp, *hf;
 
-   FILE *pp = popen("dmenu -i -l 10 -p 'sxp>' <" SXP_HISTORY, "r");
+   char pathbuf[1024];
+   char *home = getenv("HOME");
+   if (home != NULL) {
+      snprintf(pathbuf, 1023, "%s/" SXP_HISTORY, home);
+      pathbuf[1023] = '\0';
+      
+      // make sure the history file exists
+      hf = fopen(SXP_HISTORY, "a"); fclose(hf);
+      system("sort " SXP_HISTORY " | uniq > " SXP_HISTORY "~");
+      system("mv " SXP_HISTORY "~ " SXP_HISTORY);
+
+      pp = popen("dmenu -i -l 10 -p 'sxp>' <" SXP_HISTORY, "r");
+   } else {
+      pp = popen("dmenu -i -l 10 -p 'sxp>'", "r");
+   }
+
    if (!pp) return;
    char buf[1024 + 1];
    buf[1024] = '\0';

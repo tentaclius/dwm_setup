@@ -76,8 +76,8 @@ InOutPipeT dmenu_qry(const char *prompt, unsigned lines)
       if (dup2(p_out[1], STDOUT_FILENO) == -1) goto cleanup;
 
       if (lines == 0)
-         /*execlp("dmenu", "dmenu", "-i", "-p", prompt, NULL);*/
-         execlp("rofi", "rofi", "-dmenu", "-i", "-p", prompt, NULL);
+         execlp("dmenu", "dmenu", "-i", "-p", prompt, NULL);
+         /*execlp("rofi", "rofi", "-dmenu", "-i", "-p", prompt, NULL);*/
       else
       {
          char str[12 + 1];
@@ -85,8 +85,8 @@ InOutPipeT dmenu_qry(const char *prompt, unsigned lines)
 
          snprintf(str, 11, "%u", lines);
 
-         /*execlp("dmenu", "dmenu", "-i", "-p", prompt, "-l", str, NULL);*/
-         execlp("rofi", "rofi", "-dmenu", "-i", "-p", prompt, "-l", str, NULL);
+         execlp("dmenu", "dmenu", "-i", "-p", prompt, "-l", str, NULL);
+         /*execlp("rofi", "rofi", "-dmenu", "-i", "-p", prompt, "-l", str, NULL);*/
       }
       exit(1);
    }
