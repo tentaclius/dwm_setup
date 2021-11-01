@@ -4,6 +4,8 @@
 #define APP_CACHE "~/.cache/applications.cache"
 #define APP_CACHE_SEPARATOR '/'
 #define MAX_TAGLEN 16
+#define ICONSIZE 20
+#define ICONSPACING 2
 
 /* appearance */
 static const unsigned int borderpx  = 5;        /* border pixel of windows */
@@ -29,7 +31,7 @@ static const char *colors[][3]      = {
 };
 
 /* tagging */
-static char tags[][MAX_TAGLEN] = { "1", "2", "3", "4", }; //"5", "6", "7", "8", "9" };
+static char tags[][MAX_TAGLEN] = { "1", "2", "3", "4", "5", }; // "6", "7", "8", "9" };
 
 static unsigned cpt = 3; /* clients per tag (in stack area) */
 
@@ -93,7 +95,7 @@ static Key keys[] = {
 	/* modifier                     key        function        argument */
    { MODKEY,                       XK_apostrophe, findwin,    "win-find", {0} },
    { MODKEY|Mod1Mask,              XK_apostrophe, findwinontag, "win-find-on-tag", {0} },
-   { MODKEY|ShiftMask,             XK_apostrophe, pullwin,    "win-pull", {0} },
+   { MODKEY,                       XK_grave,  pullwin,    "win-pull", {0} },
    { MODKEY|ShiftMask,             XK_f,      findcurwin,     "win-find-first-tag", {0} },
    { MODKEY|ControlMask,           XK_l,      spawn,          "screen-lock", {.v = lockscreencmd } },
    { MODKEY,                       XK_comma,  nexttag,        "tag-prev", {.i = -1 } },

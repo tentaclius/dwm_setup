@@ -250,7 +250,7 @@ s_recur_analyze(struct client_ref_t **clients, node_t *node)
 
       for ( i = 0, c = *clients;
             i < node->n && c != NULL;
-            i ++, c = c->next )
+            i ++, c = c->next)
       {
          prev = c;
       }
@@ -270,7 +270,7 @@ s_recur_analyze(struct client_ref_t **clients, node_t *node)
    }
 
    if (node->type == ND_CLIENT_CLASS) {
-      struct client_ref_t *prev = NULL;
+      //struct client_ref_t *prev = NULL;
       struct s_recur_analyze_ret ret;
 
       for ( c = *clients; c != NULL; c = c->next) {
@@ -532,7 +532,6 @@ struct string_token_t* tokenize_string(char *str)
    head.next = NULL;
    unsigned word_start = UINT_MAX;
    unsigned len = 0;
-   char *s = NULL;
 
    for (unsigned i = 0;; i ++) {
       switch (str[i]) {
@@ -547,6 +546,10 @@ struct string_token_t* tokenize_string(char *str)
                strncpy(node->token, &str[word_start], len);
                node->token[len] = '\0';
             }
+            return head.next;
+
+         // Comment
+         case ';':
             return head.next;
 
          // Beginning of a string
