@@ -96,6 +96,7 @@ static Key keys[] = {
    { MODKEY,                       XK_apostrophe, findwin,    "win-find", {0} },
    { MODKEY|Mod1Mask,              XK_apostrophe, findwinontag, "win-find-on-tag", {0} },
    { MODKEY,                       XK_grave,  pullwin,    "win-pull", {0} },
+   { MODKEY,                       XK_backslash, pullwin,    "win-pull", {0} },
    { MODKEY|ShiftMask,             XK_f,      findcurwin,     "win-find-first-tag", {0} },
    { MODKEY|ControlMask,           XK_l,      spawn,          "screen-lock", {.v = lockscreencmd } },
    { MODKEY,                       XK_comma,  nexttag,        "tag-prev", {.i = -1 } },
