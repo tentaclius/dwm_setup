@@ -711,6 +711,7 @@ void
 cliuntag(const Arg *arg)
 {
    Client *c = selmon->sel;
+   if (c == NULL) return;
 
    c->tags &= ~selmon->tagset[selmon->seltags];
    focus(NULL);
@@ -947,7 +948,7 @@ drawbar(Monitor *m)
 
 	if ((w = m->ww - sw - stw - x) > bh) {
 		if (n > 0) {
-			tw = TEXTW(m->sel->name) + lrpad + (m->sel->icon ? m->sel->icw + ICONSPACING : 0);
+			tw = MIN(32, TEXTW(m->sel->name) + lrpad + (m->sel->icon ? m->sel->icw + ICONSPACING : 0));
 			mw = (tw >= w || n == 1) ? 0 : (w - tw) / (n - 1);
 
 			i = 0;
@@ -966,7 +967,7 @@ drawbar(Monitor *m)
 			for (c = m->clients; c; c = c->next) {
 				if (!ISVISIBLE(c))
 					continue;
-				tw = MIN(m->sel == c ? w : mw, TEXTW(c->name) + (c->icon ? c->icw + ICONSPACING : 0));
+            tw = MIN(300, MIN(m->sel == c ? w : mw, TEXTW(c->name) + (c->icon ? c->icw + ICONSPACING : 0)));
 
 				drw_setscheme(drw, scheme[m->sel == c ? SchemeSel : SchemeNorm]);
 				if (tw > 0) /* trap special handling of 0 in drw_text */
@@ -1099,8 +1100,13 @@ void findwin(const Arg *arg)
    while (!(first_tag & c->tags) && first_tag < (1<<LENGTH(tags)))
       first_tag <<= 1;
 
+
    Arg a = {.ui = first_tag};
-   view(&a);
+   if (first_tag >= (1<<LENGTH(tags)))
+      c->tags |= selmon->tagset[selmon->seltags];
+   else
+      view(&a);
+
    focus(c);
    arrange(selmon);
 
