@@ -94,10 +94,13 @@ static const char *screenshot[] = { "gtk4-launch", "org.gnome.Screenshot.desktop
 static Key keys[] = {
 	/* modifier                     key        function        argument */
    { MODKEY,                       XK_apostrophe, findwin,    "win-find", {0} },
-   { MODKEY|Mod1Mask,              XK_apostrophe, findwinontag, "win-find-on-tag", {0} },
-   { MODKEY,                       XK_grave,  findwin,       "win-find", {0} },
+   { MODKEY,                       XK_grave,  findwin,       "", {0} },
    { MODKEY,                       XK_backslash, pullwin,    "win-pull", {0} },
+   { MODKEY|ShiftMask,             XK_apostrophe, pullwin,    "", {0} },
+   { MODKEY|Mod1Mask,              XK_apostrophe, findwinontag, "win-find-on-tag", {0} },
+   { Mod1Mask,                     XK_grave,  findwinontag,   "", {0} },
    { MODKEY|ShiftMask,             XK_f,      findcurwin,     "win-find-first-tag", {0} },
+
    { MODKEY|ControlMask,           XK_l,      spawn,          "screen-lock", {.v = lockscreencmd } },
    { MODKEY,                       XK_comma,  nexttag,        "tag-prev", {.i = -1 } },
    { MODKEY,                       XK_period, nexttag,        "tag-next", {.i = +1 } },
