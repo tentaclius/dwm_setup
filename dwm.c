@@ -207,9 +207,7 @@ static void findcurwin(const Arg *arg);
 static void focus(Client *c);
 static void focusin(XEvent *e);
 static void focusnth(const Arg *arg);
-#if 0
 static void focusmon(const Arg *arg);
-#endif
 static void focusstack(const Arg *arg);
 static Picture geticonprop(Window w, unsigned int *icw, unsigned int *ich);
 static Atom getatomprop(Client *c, Atom prop);
@@ -1238,7 +1236,6 @@ focusnth(const Arg *arg)
    }
 }
 
-#if 0
 void
 focusmon(const Arg *arg)
 {
@@ -1252,7 +1249,6 @@ focusmon(const Arg *arg)
 	selmon = m;
 	focus(NULL);
 }
-#endif
 
 void
 focusstack(const Arg *arg)

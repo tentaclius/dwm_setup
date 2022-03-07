@@ -77,6 +77,7 @@ static const Layout layouts[] = {
 /* commands */
 static char dmenumon[2] = "0"; /* component of dmenucmd, manipulated in spawn() */
 static const char *dmenucmd[] = { "dmenu_run", "-p", "shell command>", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
+static const char *dmenutermcmd[] = { "dmenu_term_run", "-p", "shell command>", "-m", dmenumon, "-fn", dmenufont, "-nb", col_gray1, "-nf", col_gray3, "-sb", col_cyan, "-sf", col_gray4, NULL };
 //static const char *termcmd[] = { "st", NULL };
 static const char *termcmd[] = { "term", NULL };
 static const char *lockscreencmd[] = { "gnome-screensaver-command", "-l", NULL };
@@ -118,6 +119,7 @@ static Key keys[] = {
    { MODKEY,                       XK_w,      cliuntag,       "untag", {0} },
 
 	{ MODKEY,                       XK_r,      spawn,          "run-cmd", {.v = dmenucmd } },
+   { MODKEY|ShiftMask,             XK_r,      spawn,          "run-in-term", {.v = dmenutermcmd }},
 	{ MODKEY,                       XK_Return, spawn,          "run-term", {.v = termcmd } },
 	{ MODKEY,                       XK_b,      togglebar,      "bar-toggle", {0} },
 	{ MODKEY,                       XK_j,      focusstack,     "win-focus-next", {.i = +1 } },
@@ -145,10 +147,11 @@ static Key keys[] = {
 	{ MODKEY,                       XK_0,      view,           "tag-view 0", {.ui = ~0 } },
 	{ MODKEY|ShiftMask,             XK_0,      tag,            "win-tag-set 0", {.ui = ~0 } },
    { MODKEY|Mod1Mask,              XK_0,      focusnth,       "focus-nth 9", {.ui = 9 } },
-	//{ MODKEY,                       XK_comma,  focusmon,       {.i = -1 } },
-	//{ MODKEY,                       XK_period, focusmon,       {.i = +1 } },
-	//{ MODKEY|ShiftMask,             XK_comma,  tagmon,         {.i = -1 } },
-	//{ MODKEY|ShiftMask,             XK_period, tagmon,         {.i = +1 } },
+
+   { MODKEY|Mod1Mask,              XK_comma,  focusmon,       "prev-mon", {.i = -1 } },
+   { MODKEY|Mod1Mask,              XK_period, focusmon,       "next-mon", {.i = +1 } },
+   { MODKEY|ControlMask,           XK_comma,  tagmon,         "move-to-prev-mon", {.i = -1 } },
+   { MODKEY|ControlMask,           XK_period, tagmon,         "move-to-next-mon", {.i = +1 } },
 	TAGKEYS(                        XK_1,                      "1", 0)
 	TAGKEYS(                        XK_2,                      "2", 1)
 	TAGKEYS(                        XK_3,                      "3", 2)
