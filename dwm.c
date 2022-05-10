@@ -3254,7 +3254,7 @@ zoom(const Arg *arg)
 void
 runAutostart()
 {
-   system("cd ~/bin; ./autostart.sh &");
+   system("cd ~/bin; ./dwm_autostart.sh &");
 }
 
 int

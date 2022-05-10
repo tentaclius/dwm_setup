@@ -20,6 +20,7 @@ c           ; client slot
 ;; parameters
 w: weight:  ; weight of the given client or node
 f: x y w h  ; floating gemoetry
+m: margin:  ; margin for the client
 
 ;; containers
 (h ...)
@@ -29,8 +30,7 @@ f: x y w h  ; floating gemoetry
 
 /***
  * TODO:
- * - Window margin support;
- * - Floating nodes (h, v, m)
+ * - variable parameter(s), modifiable with Super-h/k
 ***/
 
 #include <stdio.h>
@@ -723,7 +723,7 @@ node_t* parse_sexp(string_token_t **token)
       // margin
       if (((strcmp(t->token, "m:") == 0) || strcmp(t->token, ":m") == 0 
                || strcmp(t->token, "margin:") == 0
-               || strcmp(t->token, ":margin")) && head != NULL) {
+               || strcmp(t->token, ":margin") == 0) && head != NULL) {
          t = t->next;
 
          if (t != NULL) {
@@ -736,7 +736,7 @@ node_t* parse_sexp(string_token_t **token)
       // floating geometry
       if ((strcmp(t->token, "f:") == 0 || strcmp(t->token, ":f") == 0
                || strcmp(t->token, "float:") == 0
-               || strcmp(t->token, ":float")) && head != NULL) {
+               || strcmp(t->token, ":float") == 0) && head != NULL) {
          head->f = 1;
          t = t->next;
 
